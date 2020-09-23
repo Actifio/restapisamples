@@ -13,7 +13,7 @@ All examples in this article do NOT use URL encoding.
 
 ## Variables when issuing info and task commands:
 
-All examples will use variables with curl.   This means the IP address is always shown as **$cdsip**.   In a bash script the login parts could get assembled like this:
+All examples will use variables with curl.   This means the IP address is always shown as **$vdpip**.   In a bash script the login parts could get assembled like this:
 ```
 #!/bin/bash
 # IP is hardset but could be fetched as a parm like this:
@@ -22,7 +22,7 @@ cdsip=172.24.1.180
 # We presume the user has logged in with AD user, else we can prompt for user as well
 # read -p "Username to login to Actifio Appliance: " cdsuser
 cdsuser=$(whoami)
-read -s -p "Password for user $cdsuser on $cdsip: " cdspass
+read -s -p "Password for user $cdsuser on $vdpip: " cdspass
 cdskey=727b5563-adf6-4450-9b60-24276194ddb5
 ```
 
@@ -31,21 +31,21 @@ If you do not quote your commands when used in a shell, you will need to use bac
 So for instance we wouldn't use this command to list backups in the remote-dedup job class.
 Note the use of %3D, which is an encoding = sign.
 ```
-curl -s -w "\n" -k https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&filtervalue=jobclass%3Dremote-dedup
+curl -s -w "\n" -k https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&filtervalue=jobclass%3Dremote-dedup
 ```
 You would use this (using the backslash before &filtervalue)
 Note the use of %3D, which is an encoding = sign.
 ```
-curl -s -w "\n" -k https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid\&filtervalue=jobclass%3Dremote-dedup
+curl -s -w "\n" -k https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid\&filtervalue=jobclass%3Dremote-dedup
 ```
 If we double quote the URL we can avoid the back slashes
 Note how we also don't need to encode the = sign
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&filtervalue=jobclass=remote-dedup" | jq
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&filtervalue=jobclass=remote-dedup" | jq
 ```
 For example you can see here, we are using no  backslashes or URL encoding at all:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&filtervalue=jobclass=liveclone" | jq -cr '.result[] | [.id, .jobclass, .hostname, .appname]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&filtervalue=jobclass=liveclone" | jq -cr '.result[] | [.id, .jobclass, .hostname, .appname]'
 ["22009825","liveclone","Oracle-Prod","localdb"]
 ["22026416","liveclone","hq-sql","smalldb"]
 ["22200952","liveclone","Oracle-Mask-Prd","dmdb"]
@@ -55,11 +55,11 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessioni
 Another example is fetching a session ID.   We can use this command.
 Note the URL is double quoted, but contains no backslashes)
 ```
-sessionid=$(curl -w "\n" -s -k -XPOST "https://$cdsip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq -r '.sessionid')
+sessionid=$(curl -w "\n" -s -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq -r '.sessionid')
 ```
 There may be other commands that use characters that need to be URL encoded, so we can use a syntax like this:
 ```
-curl -sS -w "\n" -k -G  "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=remote-dedup"  -d "sessionid=$sessionid" | jq
+curl -sS -w "\n" -k -G  "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=remote-dedup"  -d "sessionid=$sessionid" | jq
 ```
 ### What Curl options are used in these examples?
 If using Curl we use the following
@@ -91,21 +91,21 @@ wget --no-check-certificate -q -O -  https://172.24.1.180/actifio/api/version| j
 
 In this example we double quote the URL to avoid the need to use backslashes.  We then push to jq to pull out just the session ID
 ```
-wget --no-check-certificate -q -O - "https://$cdsip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq  '.sessionid'
+wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq  '.sessionid'
 "a45a601d-701c-4f81-9da8-5f1802d87f6e"
 ```
 We can place the session ID into a variable.  Make sure to use -r to remove the double quotes.
 ```
-sessionid=$(wget --no-check-certificate -q -O - "https://$cdsip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq -r '.sessionid')
+sessionid=$(wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq -r '.sessionid')
 ```
 ### List all running jobs:
 Again we just double quote the URL
 ```
-wget --no-check-certificate -q -O - "https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid" | jq
+wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid" | jq
 ```
 ### List just running dedup jobs
 ```
-wget --no-check-certificate -q -O - "https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid&filtervalue=jobclass=dedup" | jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
+wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid&filtervalue=jobclass=dedup" | jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
 ["Job_22297587","dedup","oracle-rac-1","raccldb","","running","30"]
 ["Job_22297587_00","dedup","oracle-rac-1","raccldb","","running","30"]
 ["Job_22297587_01","dedup","oracle-rac-1","raccldb","","running","25"]
@@ -145,7 +145,7 @@ $ curl -s -k  https://172.24.1.180/actifio/api/version| jq -r '.result'
 ## Fetching Session ID
 To get a session ID we do this:
 ```
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"
 ```
 Normally we get this:
 ```
@@ -153,7 +153,7 @@ Normally we get this:
 ```
 We pipe the output to jq
 ```
-curl -w "\n" -sS -k -XPOST "https://$cdsip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq 
+curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq 
 ```
 The output is:
 ```
@@ -192,24 +192,24 @@ The output is:
 ```
 We want just the session ID, so use JQ to parse it out, asking just for the sessionid using:      jq  '.sessionid'
 ```
-curl -w "\n" -sS -k -XPOST "https://$cdsip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq  '.sessionid'
+curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq  '.sessionid'
 "fd8c3c03-5f64-4126-a6c8-27e60dfbc44e"
 ```
 If we want to remove the double quotes, use -r like this:    jq -r  '.sessionid'
 ```
-curl -w "\n" -sS -k -XPOST "https://$cdsip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq -r  '.sessionid'
+curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq -r  '.sessionid'
 24a87504-0791-4af2-87e1-f6cc00f30748
 ```
 So now we get to this.  We could add error handling, if the output is null, it is because the password didn't work or we couldn't find the device.
 Since we pull the sessionid from the output, either we got a session id (success) or we didn't (failure).
 ```
-sessionid=$(curl -w "\n" -sS -k -XPOST "https://$cdsip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq -r '.sessionid')
+sessionid=$(curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq -r '.sessionid')
 if
 [ -n "$sessionid" ] && [ "$sessionid' != "null" ]
 then
-echo "Login for user $cdsuser to $cdsip succeeded"
+echo "Login for user $cdsuser to $vdpip succeeded"
 else
-echo "Login for user $cdsuser to $cdsip failed"
+echo "Login for user $cdsuser to $vdpip failed"
 fi
 ```
 # Listing jobs - example commands:
@@ -219,11 +219,11 @@ udsinfo lsjob
 ```
 So to list all running jobs:
 ```
-curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid
+curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid
 ```
 To list all jobs and format in a nice way:
 ```
-$ curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid| jq -cr  '["Jobname", "Jobclass", "HostName"], "AppName"], "TargetHost", "Status", "Progress"]],(.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress])'
+$ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid| jq -cr  '["Jobname", "Jobclass", "HostName"], "AppName"], "TargetHost", "Status", "Progress"]],(.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress])'
 ["gc_22179120","gc","","","","running","37"]
 ["gc_22179120_000E","gc","","","","running","37"]
 ["Job_22179498","remote-dedup","demo-sql-6","C:\\","","running","78"]
@@ -236,7 +236,7 @@ $ curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid
 ```
 To list all jobs and put in CSV format:
 ```
-$ curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress] | @csv'
+$ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress] | @csv'
 "gc_22179120","gc","","","","running","37"
 "gc_22179120_000E","gc","","","","running","37"
 "Job_22179498","remote-dedup","demo-sql-6","C:\","","running","78"
@@ -245,7 +245,7 @@ $ curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid
 ```
 To list all jobs and put in a nice format with header:
 ```
-$ curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid| jq -cr  '["Jobname", "Jobclass", "HostName", "AppName", "TargetHost", "Status", "Progress"], (.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress])'
+$ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid| jq -cr  '["Jobname", "Jobclass", "HostName", "AppName", "TargetHost", "Status", "Progress"], (.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress])'
 ["Jobname","Jobclass","HostName","AppName","TargetHost","Status","Progress"]
 ["gc_22179120","gc","","","","running","37"]
 ["gc_22179120_000E","gc","","","","running","37"]
@@ -260,7 +260,7 @@ $ curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid
 To list just remote-dedup jobs using filter value.   We need to turn this command into REST:
 ```
 udsinfo lsjob -filtervalue jobclass=remote-dedup
-$ curl -sS -w "\n" -k "https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid&filtervalue=jobclass=remote-dedup"| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
+$ curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid&filtervalue=jobclass=remote-dedup"| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
 ["Job_22179498","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ["Job_22179502","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ["Job_22179498_00","remote-dedup","demo-sql-6","C:\\","","running","78"]
@@ -279,7 +279,7 @@ udsinfo lsjob -filtervalue jobclass=remote-dedup\&parentid=0
 However since we are actually using two filter values of jobclass=remote-dedup and parentid=0  in REST this means I have two choices.
 The first is to URL encode the middle '&' into a %26.
 ```
-$ curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid\&filtervalue=jobclass=remote-dedup%26parentid=0| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
+$ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid\&filtervalue=jobclass=remote-dedup%26parentid=0| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
 ["Job_22179498","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ["Job_22179502","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ["Job_22179506","remote-dedup","demo-sql-6","C:\\","","running","78"]
@@ -287,11 +287,11 @@ $ curl -sS -w "\n" -k https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid
 ```
 To avoid doing this, we need to use different syntax like this.   This splits the session ID out and allows us to avoid URL encoding in the filter value.
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsjob" --data-urlencode "filtervalue=jobclass=remote-dedup&parentid=0"-d "sessionid=$sessionid"| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsjob" --data-urlencode "filtervalue=jobclass=remote-dedup&parentid=0"-d "sessionid=$sessionid"| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
 ```
 To check just one job:
 ```
-curl -sS -w "\n" -k "https://$cdsip/actifio/api/info/lsjob?sessionid=$sessionid&argument=Job_22179743"|jq 
+curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid&argument=Job_22179743"|jq 
 {
   "result": {
     "progress": "9",
@@ -334,7 +334,7 @@ We can use a command like this to look at snapshots for appid 3434456 that have 
 udsinfo lsbackup -filtervalue 'appid=3434456&jobclass=snapshot&consistencydate>=2018-09-19'
 The easiest way to do this in restful API is like this:
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=appid=3434456&jobclass=snapshot&consistencydate>=2018-09-19" -d "sessionid=$sessionid" | jq
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=appid=3434456&jobclass=snapshot&consistencydate>=2018-09-19" -d "sessionid=$sessionid" | jq
 ```
 ## Mounting and unmounting Images - Example 1: Mount most recent snap
 Lets mount the most recent snapshot from application ID 20837997 to a host called demo-oracle-4
@@ -342,7 +342,7 @@ Lets mount the most recent snapshot from application ID 20837997 to a host calle
 udstask mountimage -appid 20837997 -host demo-oracle-4
 ```
 ```
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/mountimage?appid=20837997&host=demo-oracle-4&sessionid=$sessionid"| jq
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/mountimage?appid=20837997&host=demo-oracle-4&sessionid=$sessionid"| jq
 {
   "result": "Job_22189131 to mount Image_22187857 completed",
   "status": 0
@@ -353,7 +353,7 @@ Lets find that image:
 udsinfo lsbackup -filtervalue jobclass=mount\&appid=20837997
 ```
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode"filtervalue=jobclass=mount&appid=20837997" -d "sessionid=$sessionid"| jq 
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode"filtervalue=jobclass=mount&appid=20837997" -d "sessionid=$sessionid"| jq 
 {
   "result": [
     {
@@ -394,7 +394,7 @@ We know the host name, but need the host ID, to get mountedhostid for next comma
 udsinfo lshost -filtervalue hostname=demo-oracle-4
 ```
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&filtervalue=hostname=demo-oracle-4" | jq -rc '.result[] | [.id, .hostname]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lshost?sessionid=$sessionid&filtervalue=hostname=demo-oracle-4" | jq -rc '.result[] | [.id, .hostname]'
 ["20929573","demo-oracle-4"]
 ```
 Now we know mounted  host ID, we can learn backup name
@@ -402,7 +402,7 @@ Now we know mounted  host ID, we can learn backup name
 udsinfo lsbackup -filtervalue jobclass=mount\&mountedhost=20929573
 ```
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode"filtervalue=jobclass=mount&mountedhost=20929573" -d sessionid=$sessionid| jq -rc '.result[] | [.id, .backupname, .label]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode"filtervalue=jobclass=mount&mountedhost=20929573" -d sessionid=$sessionid| jq -rc '.result[] | [.id, .backupname, .label]'
 ["22189218","Image_22189211",""]
 ```
 (see how the Job_xxxx  number to create can be used to find the image, which is usually Image_xxxx)
@@ -410,7 +410,7 @@ curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlenco
 udstask unmountimage -image Image_22188094 -delete
 ```
 ```
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete" | jq
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete" | jq
 {
   "result": "Job_22189234 to unmount Image_22189211 completed",
   "status": 0
@@ -421,7 +421,7 @@ If we try and remove the same image, it fails, which is should:
 udstask unmountimage -image Image_22188094 -delete
 ```
 ```
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete"​| jq
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete"​| jq
 {
   "errormessage": "image does not exist: Image_22189211",
   "errorcode": 10016
@@ -432,7 +432,7 @@ We can just request the error message:
 udstask unmountimage -image Image_22188094 -delete
 ```
 ```
-curl -s -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete"| jq '.errormessage'
+curl -s -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete"| jq '.errormessage'
 "image does not exist: Image_22189211"
 ```
 Also with raw, to remove the quotes from the JSON:
@@ -440,7 +440,7 @@ Also with raw, to remove the quotes from the JSON:
 udstask unmountimage -image Image_22188094 -delete
 ```
 ```
-curl -s -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete" | jq -r '.errormessage'
+curl -s -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete" | jq -r '.errormessage'
 image does not exist: Image_22189211
 ```
 ## Mounting and unmounting Images - Example 2:  Mount using Drive Letters
@@ -450,7 +450,7 @@ udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=20990406
 ```
 Lets learn just the ID and consistency date.
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=snapshot&appid=20990406" -d "sessionid=$sessionid"| jq -c '.result [] | [.id, .consistencydate]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=snapshot&appid=20990406" -d "sessionid=$sessionid"| jq -c '.result [] | [.id, .consistencydate]'
 ["22181177","2015-11-27 07:04:15.000"]
 ["22182135","2015-11-27 19:04:21.000"]
 ["22183338","2015-11-28 07:04:23.000"]
@@ -463,7 +463,7 @@ Lets learn more about one image:
 udsinfo lsbackup -filtervalue id=22185180
 ```
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode"filtervalue=id=22185180" -d "sessionid=$sessionid"| jq '.result'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode"filtervalue=id=22185180" -d "sessionid=$sessionid"| jq '.result'
 [
   {
     "virtualsize": "51531218944",
@@ -501,7 +501,7 @@ Without the filter value we get much more detail.  Note for restful we need to u
 udsinfo lsbackup 22185180
 ```
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22185180"| jq '.result'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22185180"| jq '.result'
 {
   "  nvolumes": "2",
   "appclass": "SQLServer",
@@ -585,7 +585,7 @@ So now lets mount this image to a Windows host without doing anything clever
 udstask mountimage -image 22185180 -host demo-sql-4
 ```
 ```
-curl -s -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/mountimage?image=22185180&host=demo-sql-4&sessionid=$sessionid"| jq
+curl -s -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/mountimage?image=22185180&host=demo-sql-4&sessionid=$sessionid"| jq
 {
   "result": "Job_22190405 to mount Image_22185179 completed",
   "status": 0
@@ -595,7 +595,7 @@ The assigned drives are Y: and Z:
 Lets instead specify which drive letter should be used for source drive.
 We have two drives in the source volume:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22185180"| jq '.result | ."    uniqueid"'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22185180"| jq '.result | ."    uniqueid"'
 [
   "dasvol:L:\\",
   "dasvol:S:\\"
@@ -608,7 +608,7 @@ udstask mountimage -image 22330658-host demo-sql-4 -restoreoption 'mountdriveper
 ```
 Due to some quirk in the URL encoding, we need to encase the restore option in single quotes as well (rather than double quotes, which most of these examples use).
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22330658&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountdriveperdisk-dasvol:L:\=P:\,mountdriveperdisk-dasvol:S:\=N:\'
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=22330658&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountdriveperdisk-dasvol:L:\=P:\,mountdriveperdisk-dasvol:S:\=N:\'
 
 {"result":"Job_22334168 to mount Image_22330657 completed","status":0}
 ```
@@ -618,7 +618,7 @@ Now it is time to unmount
 udstask unmountimage -image Image_22333318 -delete
 ```
 ```
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22333318&delete" | jq
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22333318&delete" | jq
 {
   "result": "Job_22333339 to unmount Image_22333318 completed",
   "status": 0
@@ -634,7 +634,7 @@ udstask mountimage -image 22185180 -host demo-sql-4 -restoreoption'mountpointper
 ```
 Which gives us this command:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22330658&host=demo-sql-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:L:\=C:\Test\Data,mountpointperdisk-dasvol:S:\=C:\Test\Logs"
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=22330658&host=demo-sql-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:L:\=C:\Test\Data,mountpointperdisk-dasvol:S:\=C:\Test\Logs"
 
 {"result":"Job_22333318 to mount Image_22330657 completed","status":0}
 ```
@@ -644,7 +644,7 @@ Now it is time to unmount
 udstask unmountimage -image Image_22333318 -delete
 ```
 ```
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22333318&delete" | jq
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22333318&delete" | jq
 {
   "result": "Job_22333339 to unmount Image_22333318 completed",
   "status": 0
@@ -656,7 +656,7 @@ How do we get restore options listed?
 udsinfo lsappclass
 ```
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsappclass?sessionid=$sessionid" | jq -c '.result [] | [.name]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsappclass?sessionid=$sessionid" | jq -c '.result [] | [.name]'
 ["OracleGroup"]
 ["SQLServerGroup"]
 ["Oracle"]
@@ -668,7 +668,7 @@ udsinfo lsrestoreoptions -applicationtype SQLServer -action mount -targethost 20
 ```
 In the example above, you will need to change the target host to match your own.
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsrestoreoptions?applicationtype=SQLServer&action=mount&targethost=20933867&sessionid=$sessionid" | jq -c '.result [] | [.name]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsrestoreoptions?applicationtype=SQLServer&action=mount&targethost=20933867&sessionid=$sessionid" | jq -c '.result [] | [.name]'
 ["restoremacaddr"]
 ["mountdriveperdisk"]
 ["mountpointperimage"]
@@ -690,7 +690,7 @@ udstask mountimage -image 22311818 -host demo-oracle-4 -restoreoption "mountpoin
 ```
 Which gives us this command:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22311818&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:/home=/mnt/jsontest"
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=22311818&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:/home=/mnt/jsontest"
 ```
 On our Linux Target host we see:
 ```
@@ -711,7 +711,7 @@ udsinfo lsbackup 22349758 | grep dasvol
 ```
 Which gives us this command:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22349758"| jq '.result | ."    uniqueid"'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22349758"| jq '.result | ."    uniqueid"'
 [
   "dasvol:smalldb",
   "dasvol:smalldb_archivelog"
@@ -723,7 +723,7 @@ udstask mountimage -image 22349758 -host demo-oracle-4 -restoreoption "mountpoin
 ```
 Which gives us this command:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22349758&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:smalldb=/mnt/database,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/logs"
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=22349758&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:smalldb=/mnt/database,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/logs"
 ```
 On the host we then see:
 ```
@@ -746,7 +746,7 @@ udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=21090610
 ```
 Lets learn just the ID and consistency date.
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=snapshot&appid=21090610" -d "sessionid=$sessionid" | jq -c '.result [] | [.id, .consistencydate]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=snapshot&appid=21090610" -d "sessionid=$sessionid" | jq -c '.result [] | [.id, .consistencydate]'
 ["22308340","2015-12-08 17:22:00.000"]
 ["22315337","2015-12-09 05:21:59.000"]
 ["22321893","2015-12-09 17:22:10.000"]
@@ -760,7 +760,7 @@ udsinfo lsbackup 22196359
 ```
 Notice the long space in the name of the variable, this is as per the source.
 ```
-curl -sS -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22196359"| jq '.result | ."    uniqueid"'
+curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22196359"| jq '.result | ."    uniqueid"'
 "dasvol:S:\\"
 ```
 The big change is we add provisioning options.   There is an appaware flag but we don't need to use it, since we are using the provisioning options.
@@ -769,7 +769,7 @@ udstask mountimage -image 22196359-host demo-sql-4 -restoreoption 'mountpointper
 ```
 We put this into a REST command without any URL encoding (leave that to curl):
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=Image_22196358&host=demo-sql-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:S:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>" | jq
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=Image_22196358&host=demo-sql-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:S:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>" | jq
 {
   "result": "Job_22201771 to mount Image_22196358 completed",
   "status": 0
@@ -779,7 +779,7 @@ And more importantly in SQL Server we see:
 Now it is time to unmount
 ```
 udstask unmountimage -image Image_22201771 -delete
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22201771&delete" | jq
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22201771&delete" | jq
 {
   "result": "Job_22333339 to unmount Image_22333318 completed",
   "status": 0
@@ -788,7 +788,7 @@ curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?session
 App Aware SQL mount to drive letter
 We have two drives in the source volume:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22330658" | jq '.result | ."    uniqueid"'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22330658" | jq '.result | ."    uniqueid"'
 [
   "dasvol:L:\\",
   "dasvol:S:\\"
@@ -801,7 +801,7 @@ udstask mountimage -image 22330658-host demo-sql-4 -restoreoption 'mountdriveper
 ```
 Due to some quirk in the URL encoding, we need to encase the restore option in single quotes as well (rather than double quotes, which most of these examples use).
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22330658&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountdriveperdiskddasvol:L:\=P:\,mountdriveperdiskddasvol:S:\=N:\,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>'
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=22330658&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountdriveperdiskddasvol:L:\=P:\,mountdriveperdiskddasvol:S:\=N:\,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>'
 
 {"result":"Job_22334207 to mount Image_22330657 completed","status":0}
 ```
@@ -810,7 +810,7 @@ Now it is time to unmount
 udstask unmountimage -image Image_22333318 -delete
 ```
 ```
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22334207&delete" | jq
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22334207&delete" | jq
 {
   "result": "Job_22333339 to unmount Image_22333318 completed",
   "status": 0
@@ -819,7 +819,7 @@ curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?session
 How do we get restore options listed?
 1)  List all my app classes:     udsinfo lsappclass
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsappclass?sessionid=$sessionid" | jq -c '.result [] | [.name]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsappclass?sessionid=$sessionid" | jq -c '.result [] | [.name]'
 ["OracleGroup"]
 ["SQLServerGroup"]
 ["Oracle"]
@@ -831,7 +831,7 @@ udsinfo lsrestoreoptions -applicationtype SQLServer -action mount -targethost 20
 ```
 In the example above, you will need to change the target host to match your own.
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsrestoreoptions?applicationtype=SQLServer&action=mount&targethost=20933867&sessionid=$sessionid" | jq -c '.result [] | [.name]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsrestoreoptions?applicationtype=SQLServer&action=mount&targethost=20933867&sessionid=$sessionid" | jq -c '.result [] | [.name]'
 ["restoremacaddr"]
 ["mountdriveperdisk"]
 ["mountpointperimage"]
@@ -853,7 +853,7 @@ udsinfo lsappclass
 udsinfo lsappclass -name SQLServer
 ```
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsappclass?name=SQLServer&sessionid=$sessionid" | jq -c '.result [] | [.name]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsappclass?name=SQLServer&sessionid=$sessionid" | jq -c '.result [] | [.name]'
 ```
 ## Mounting and unmounting Images - Example 6:  SQL App Aware mount of a Consistency Group
 We may want to use App Aware mount of  MS SQL Consistency Group.
@@ -863,7 +863,7 @@ First we learn the Consistency Group ID.
 udsinfo lsconsistgrp
 ```
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsconsistgrp?sessionid=$sessionid" | jq -c '.result [] | [.id, .groupname]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsconsistgrp?sessionid=$sessionid" | jq -c '.result [] | [.id, .groupname]'
 ["22346859","DemoSQL4"]
 ```
 If we know the name of the consistency group we could also just look up that group:
@@ -871,7 +871,7 @@ If we know the name of the consistency group we could also just look up that gro
 udsinfo lsconsistgrp DemoSQL4
 ```
 ```
-curl -sS -w "\n" -k "https://$cdsip/actifio/api/info/lsconsistgrp?argument=DemoSQL4&sessionid=$sessionid" | jq -cr '.result | [.id,.groupname]'
+curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsconsistgrp?argument=DemoSQL4&sessionid=$sessionid" | jq -cr '.result | [.id,.groupname]'
 ["22346859","DemoSQL4"]
 ```
 We list the snaps using the group ID as the application ID:
@@ -880,7 +880,7 @@ udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=22346859
 ```
 Lets learn just the ID and consistency date.
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=snapshot&appid=22346859" -d "sessionid=$sessionid" | jq -c '.result [] | [.id, .consistencydate]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=snapshot&appid=22346859" -d "sessionid=$sessionid" | jq -c '.result [] | [.id, .consistencydate]'
 ["22346908","2015-12-11 12:19:10.000"]
 ```
 So now we want to mount image  22346908
@@ -890,7 +890,7 @@ udsinfo lsbackup  22346908
 ```
 Notice the long space in the name of the variable, this is as per the source field.
 ```
-curl -sS -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22346908" | jq '.result | ."    uniqueid"'
+curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22346908" | jq '.result | ."    uniqueid"'
 "dasvol:C:\\"
 ```
 The big change is we add provisioning options.   There is an appaware flag but we don't need to use it, since we are using the provisioning options.
@@ -900,7 +900,7 @@ udstask mountimage -image 22346908-host demo-sql-4 -restoreoption 'mountpointper
 ```
 We put this into a REST command without any URL encoding (leave that to curl).  Note in this example we use single quotes around the data that needs encoding.
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22346908&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountpointperdisk-dasvol:C:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><ConsistencyGroupName>testme</ConsistencyGroupName><sqlinstance>DEMO-SQL-4</sqlinstance><dbnameprefix>jsontest</dbnameprefix><recover>true</recover><username></username></provisioning-options>' | jq
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=22346908&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountpointperdisk-dasvol:C:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><ConsistencyGroupName>testme</ConsistencyGroupName><sqlinstance>DEMO-SQL-4</sqlinstance><dbnameprefix>jsontest</dbnameprefix><recover>true</recover><username></username></provisioning-options>' | jq
 {
   "result": "Job_22347408 to mount Image_22346905 completed",
   "status": 0
@@ -912,7 +912,7 @@ Now it is time to unmount
 udstask unmountimage -image Image_22347408 -delete
 ```
 ```
-curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22347408&delete" | jq
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22347408&delete" | jq
 {
   "result": "Job_22333339 to unmount Image_22333318 completed",
   "status": 0
@@ -929,7 +929,7 @@ udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=20837997
 ```
 Lets learn appid, hostname, app name , backup ID and  consistency date.
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "filtervalue=jobclass=snapshot&appid=20837997"  | jq -c '.result [] | [.appid, .hostname, .appname, .id, .consistencydate]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "filtervalue=jobclass=snapshot&appid=20837997"  | jq -c '.result [] | [.appid, .hostname, .appname, .id, .consistencydate]'
 ["20837997","Oracle-Prod","bigdb","22278630","2015-12-08 02:24:20.000"]
 ["20837997","Oracle-Prod","bigdb","22307252","2015-12-08 14:25:34.000"]
 ["20837997","Oracle-Prod","bigdb","22313415","2015-12-09 02:24:33.000"]
@@ -963,7 +963,7 @@ udstask mountimage -image 22187858-host demo-oracle-4 -restoreoption 'provisioni
 ```
 So we turn this into REST, again letting curl do the URL encoding:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22187858&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>"
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=22187858&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>"
 ```
 We run the command and get a successful job:
 ```
@@ -998,7 +998,7 @@ ACTIVE   PRIMARY_INSTANCE   NORMAL    NO
 ```
 When finished, we can get rid of the mount:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/unmountimage" --data-urlencode "image=Image_22202340" -d "delete&sessionid=$sessionid" | jq
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/unmountimage" --data-urlencode "image=Image_22202340" -d "delete&sessionid=$sessionid" | jq
 {
   "result": "Job_22202374 to unmount Image_22202340 completed",
   "status": 0
@@ -1040,7 +1040,7 @@ Actifio:sa-hq:av> udsinfo lsbackup Image_22349754 | grep pit
 ```
 We can grab the host pit range quite easily with this REST command:
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22349754" | jq  '.result | [."  timezone", ."  
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22349754" | jq  '.result | [."  timezone", ."  
 hostbeginpit", ."  hostendpit" ]'
 [
   "GMT-0500",
@@ -1054,7 +1054,7 @@ udstask mountimage -image Image_22349754 -host demo-oracle-4 -label testav -reco
 ```
 The REST version of this needed two data-url encode sections due to the recovery time
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=Image_22349754&host=demo-oracle-4&label=jsontest&sessionid=$sessionid" --data-urlencode 'recoverytime=2015-12-11 04:10:27' --data-urlencode 'restoreoption=provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><password type="encrypt">*******</password><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=Image_22349754&host=demo-oracle-4&label=jsontest&sessionid=$sessionid" --data-urlencode 'recoverytime=2015-12-11 04:10:27' --data-urlencode 'restoreoption=provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><password type="encrypt">*******</password><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
 ```
 One way to validate the command was issued correctly on the target host is to check the UDSAgent log with this command.
 ```
@@ -1089,7 +1089,7 @@ udsinfo lsbackup Image_22370949 | grep dasvol
 ```
 We can grab the host pit range and dasvol details quite easily with this REST command:
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22370949" | jq  '.result | [."  timezone", ."  hostbeginpit", ."  hostendpit",."    uniqueid" ]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22370949" | jq  '.result | [."  timezone", ."  hostbeginpit", ."  hostendpit",."    uniqueid" ]'
 [
   "GMT-0500",
   "2015-12-14 12:03:58",
@@ -1114,7 +1114,7 @@ udsinfo lsslp | grep Local
       51 Local profile           Local Profile  act_per_pool000                none        sa-hq
 ```
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsslt" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .name]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsslt" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .name]'
 ["103","Platinum"]
 ["8629","Gold"]
 ["16905","Bronze"]
@@ -1122,7 +1122,7 @@ curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsslt" -d "sessionid=$se
 ["7456379","Cloud"]
 ["17791329","Silver"]
 ["20460291","Silver LogSmart"]
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsslp" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .name]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsslp" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .name]'
 ["51","Local Profile"]
 ["8812","Remote Profile"]
 ["20461775","AWS Profile"]
@@ -1146,7 +1146,7 @@ udstask mountimage -image Image_22370949-host demo-oracle-4 -label testav -recov
 ```
 The REST version of this needed two data-url encode sections due to the recovery time causing some quirks:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=Image_22370949&host=demo-oracle-4&label=jsontest&sessionid=$sessionid" --data-urlencode 'recoverytime=2015-12-14 12:17:27'--data-urlencode'restoreoption=mountpointperdisk-dasvol:smalldb=/mnt/smalldb,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/smalldb_logs,reprotect=true,sltid=8629,slpid=51,provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><password type="encrypt">*******</password><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=Image_22370949&host=demo-oracle-4&label=jsontest&sessionid=$sessionid" --data-urlencode 'recoverytime=2015-12-14 12:17:27'--data-urlencode'restoreoption=mountpointperdisk-dasvol:smalldb=/mnt/smalldb,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/smalldb_logs,reprotect=true,sltid=8629,slpid=51,provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><password type="encrypt">*******</password><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
 {"result":"Job_22375641 to mount Image_22370949 completed","status":0}
 ```
 Now there are several things we need to check after this:
@@ -1176,7 +1176,7 @@ Lets look for apps with our new DB name and target host name.
 udsinfo lsapplication -filtervalue "appname=jsontest&hostname=demo-oracle-4"
 In REST that's:
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsapplication" --data-urlencode "filtervalue=appname=jsontest&hostname=demo-oracle-4" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .appname]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsapplication" --data-urlencode "filtervalue=appname=jsontest&hostname=demo-oracle-4" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .appname]'
 ["22375678","jsontest"]
 ```
 There is our application ID: 22375678
@@ -1186,7 +1186,7 @@ udsinfo lsbackup -filtervalue "appid=22375678&jobclass=snapshot"
 ```
 In REST thats:
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=appid=22375678" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .appname, .jobclass, .consistencydate]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=appid=22375678" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .appname, .jobclass, .consistencydate]'
 ["22375693","jsontest","snapshot","2015-12-15 11:22:31.000"]
 ```
 If you do not find a snapshot, maybe one is still being created or maybe your new application did not get protected.
@@ -1197,7 +1197,7 @@ usdtask expireimage -image 22375693
 
 In REST that is:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/expireimage" -d "image=22375693" -d "sessionid=$sessionid"
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/expireimage" -d "image=22375693" -d "sessionid=$sessionid"
 {"result":"Job_22375751 to expire Image_22375691 completed","status":0}
 ```
 6)  Lets get rid of the application:
@@ -1206,7 +1206,7 @@ udstask rmapplication 22375678
 ```
 In REST that is:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/rmapplication" -d "argument=22375678" -d "sessionid=$sessionid"
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/rmapplication" -d "argument=22375678" -d "sessionid=$sessionid"
 ```
 ## Mounting and unmounting Images - Example 10:  Oracle App Aware mount to RAC
 We may want to use App Aware mount to bring our Oracle database online to a RAC cluster.
@@ -1219,7 +1219,7 @@ isasm true
 ```
 We are interested in the isasmbeing true
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22336426" | jq -c '.result | [.id, .isasm, .consistencydate, ."  beginpit", ."  endpit" ]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22336426" | jq -c '.result | [.id, .isasm, .consistencydate, ."  beginpit", ."  endpit" ]'
 ["22336430","true","2015-12-11 04:06:27.000","2015-12-11 04:06:27","2015-12-11 14:01:55"]
 ```
 In this example the ASM node list is 172.24.1.231  and 172.24.1.232
@@ -1229,7 +1229,7 @@ udstask mountimage -image Image_22336426 -host oracle-rac-1 -label testav -resto
 ```
 The REST version is:
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=Image_22336426&host=oracle-rac-1&sessionid=$sessionid" --data-urlencode "restoreoption=asmracnodelist=172.24.1.231:172.24.1.232,provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/oracle/11.2.0/product/dbhome_1</orahome><tnsadmindir>/crs/11.2.0/product/grid_home/network/admin</tnsadmindir><totalmemory>1024</totalmemory><sgapct>70</sgapct><tnsip>oracle-rac-scan</tnsip><tnsport>1521</tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>"
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=Image_22336426&host=oracle-rac-1&sessionid=$sessionid" --data-urlencode "restoreoption=asmracnodelist=172.24.1.231:172.24.1.232,provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/oracle/11.2.0/product/dbhome_1</orahome><tnsadmindir>/crs/11.2.0/product/grid_home/network/admin</tnsadmindir><totalmemory>1024</totalmemory><sgapct>70</sgapct><tnsip>oracle-rac-scan</tnsip><tnsport>1521</tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>"
 
 {"result":"Job_22349396 to mount Image_22336426 completed","status":0}
 ```
@@ -1253,7 +1253,7 @@ Lets find what version connector is installed on our hosts:
 udsinfo lshost -filtervalue hasagent=true
 ```
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&filtervalue=hasagent=true" ​| jq -c '.result[] | [.id, .hostname, .ostype, .connectorversion]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lshost?sessionid=$sessionid&filtervalue=hasagent=true" ​| jq -c '.result[] | [.id, .hostname, .ostype, .connectorversion]'
 ["4497","hq-vcenter","Win32","6.1.7.60269"]
 ["4503","sa-esx1.sa.actifio.com","",""] 
 ["4508","sa-esx2.sa.actifio.com","",""]
@@ -1270,7 +1270,7 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&
 ```
 How about for a specific host:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq 
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq 
 {
   "result": {
     "ostype": "Linux",
@@ -1309,7 +1309,7 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&
 ```
 We just want the connector version:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq '.result | .connectorversion'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq '.result | .connectorversion'
 "6.1.7.60269"
 ```
 What are the latest connectors?
@@ -1317,7 +1317,7 @@ What are the latest connectors?
 udsinfo lsavailableconnector -filtervalue latest=true
 ```
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsavailableconnector?sessionid=$sessionid&filtervalue=latest=true"| jq -c '.result[] | [.ostype, .displayname]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsavailableconnector?sessionid=$sessionid&filtervalue=latest=true"| jq -c '.result[] | [.ostype, .displayname]'
 ["solaris_sparc","6.2.0.63215"]
 ["aix","6.2.0.63215"]
 ["hpux","6.2.0.63215"]
@@ -1331,7 +1331,7 @@ How about just for Linux?
 udsinfo lsavailableconnector -filtervalue ostype=linux\&latest=true
 ```
 ```
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsavailableconnector" --data-urlencode "filtervalue=latest=true&ostype=linux"-d "sessionid=$sessionid" | jq -c '.result[] | [.ostype, .displayname]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsavailableconnector" --data-urlencode "filtervalue=latest=true&ostype=linux"-d "sessionid=$sessionid" | jq -c '.result[] | [.ostype, .displayname]'
 ["linux","6.2.0.63215"]
 ```
 Time to upgrade demo-oracle-4 to the latest release.
@@ -1340,7 +1340,7 @@ This command returns immediately but it takes a few minutes for the new version 
 udstask upgradehostconnector -hosts demo-oracle-4
 ```
 ```
-curl -s -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/upgradehostconnector?sessionid=$sessionid&hosts=demo-oracle-4"| jq
+curl -s -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/upgradehostconnector?sessionid=$sessionid&hosts=demo-oracle-4"| jq
 {
   "status": 0
 }
@@ -1348,7 +1348,7 @@ curl -s -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/upgradehostconnector?
 Wait a few minutes and check again:
 
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq '.result | .connectorversion'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq '.result | .connectorversion'
 "6.2.0.63215"
 ```
 ```
@@ -1359,12 +1359,12 @@ udsinfo lsdiskpool
 ```
 Raw output from lsdiskpool:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"
 {"result":[{"id":"71","modifydate":"2015-10-01 04:00:57.144","warnpct":"77","name":"act_pri_pool000","safepct":"90","mdiskgrp":"act_pri_pool000"},{"id":"72","modifydate":"2015-08-30 10:08:12.332","warnpct":"90","name":"act_ded_pool000","safepct":"100","mdiskgrp":"act_ded_pool000"},{"id":"73","modifydate":"2015-10-01 03:42:03.440","warnpct":"81","name":"act_per_pool000","safepct":"85","mdiskgrp":"act_per_pool000"}],"status":0}
 ```
 Processed with jq
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq
 {
   "result": [
     {
@@ -1398,12 +1398,12 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessio
 First up if we look at the output we want to understand there are two sections, the resultsection and the statussection.
 If you want the result or the status, ask for it you get just that section.   The status section is rather short.
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.status'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.status'
 0
 ```
 If we grab the result section, lets ask for what is inside the box in the results section,  this is normally what is most interesting:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.result []'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.result []'
 {
   "id": "71",
   "modifydate": "2015-10-01 04:00:57.144",
@@ -1431,28 +1431,28 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessio
 ```
 We can flatten the output with -c (compact).   Because there are not many fields, this flattens nicely.   Most output have lots of fields so spread across multiple lines.
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -c '.result []'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -c '.result []'
 {"id":"71","modifydate":"2015-10-01 04:00:57.144","warnpct":"77","name":"act_pri_pool000","safepct":"90","mdiskgrp":"act_pri_pool000"}
 {"id":"72","modifydate":"2015-08-30 10:08:12.332","warnpct":"90","name":"act_ded_pool000","safepct":"100","mdiskgrp":"act_ded_pool000"}
 {"id":"73","modifydate":"2015-10-01 03:42:03.440","warnpct":"81","name":"act_per_pool000","safepct":"85","mdiskgrp":"act_per_pool000"}
 ```
 One of the nice things is we can keep piping the output for further processing without running jq twice.   In this example we first strip out the results and then ask for just the pool names:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.result [] | .name'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.result [] | .name'
 "act_pri_pool000"
 "act_ded_pool000"
 "act_per_pool000"
 ```
 In the output above we got double quotes, so if we add -r for raw we lose those and get just the names.
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -r '.result [] | .name'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -r '.result [] | .name'
 act_pri_pool000
 act_ded_pool000
 act_per_pool000
 ```
 But if we ask for two things, they get put on separate lines.
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -r '.result [] | .name, .id'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -r '.result [] | .name, .id'
 act_pri_pool000
 71
 act_ded_pool000
@@ -1462,21 +1462,21 @@ act_per_pool000
 ```
 If we want them on one line, we can define this like this:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '.result [] | [.name, .id]'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '.result [] | [.name, .id]'
 ["act_pri_pool000","71"]
 ["act_ded_pool000","72"]
 ["act_per_pool000","73"]
 ```
 If we want the output in CSV, we can do this:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '.result [] | [.name, .id] | @csv'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '.result [] | [.name, .id] | @csv'
 "act_pri_pool000","71"
 "act_ded_pool000","72"
 "act_per_pool000","73"
 ```
 If you want to add out own header lines, we can do this:
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '["PoolName", "PoolID"], (.result [] | [.name, .id]) | @csv'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '["PoolName", "PoolID"], (.result [] | [.name, .id]) | @csv'
 "PoolName","PoolID"
 "act_pri_pool000","71"
 "act_ded_pool000","72"
@@ -1486,7 +1486,7 @@ We still have double quotes.   They are not being removed by 'raw' option.
 We can use sed:   sed 's/\"//g'
 NOTE - double quotes in CSV are both legal and necessary.   Host names and App Names contain commas.  The double quotes stop them being used as field delimiters.
 ```
-curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '["PoolName", "PoolID"], (.result [] | [.name, .id]) | @csv' |  sed 's/\"//g'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '["PoolName", "PoolID"], (.result [] | [.name, .id]) | @csv' |  sed 's/\"//g'
 PoolName,PoolID
 act_pri_pool000,71
 act_ded_pool000,72
