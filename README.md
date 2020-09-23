@@ -691,7 +691,9 @@ udstask mountimage -image 22311818 -host demo-oracle-4 -restoreoption "mountpoin
 Which gives us this command:
 ```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22311818&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:/home=/mnt/jsontest"
+```
 On our Linux Target host we see:
+```
 Filesystem            Size  Used Avail Use% Mounted on
 /dev/mapper/vg_demooracle1-lv_root
                        35G   15G   19G  46% /
@@ -699,22 +701,32 @@ tmpfs                 4.9G  311M  4.6G   7% /dev/shm
 /dev/sda1             477M   68M  385M  15% /boot
 /dev/act_home_1449822759500_1449805206188/act_staging_vol
                        54G  911M   51G   2% /mnt/jsontest
+```
 Multiple mount points per image
 Lets say we have an Oracle backup that has a log disk and a database disk.     We learn what the mount points are called:
-# udsinfo lsbackup 22349758 | grep dasvol
+```
+udsinfo lsbackup 22349758 | grep dasvol
     uniqueid dasvol:smalldb
     uniqueid dasvol:smalldb_archivelog
+```
 Which gives us this command:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22349758"| jq '.result | ."    uniqueid"'
 [
   "dasvol:smalldb",
   "dasvol:smalldb_archivelog"
 ]
+```
 We want to mount the database as /mnt/database and /mnt/logs so we user this command:
+```
 udstask mountimage -image 22349758 -host demo-oracle-4 -restoreoption "mountpointperdisk-dasvol:smalldb=/mnt/database,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/logs"
+```
 Which gives us this command:
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22349758&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:smalldb=/mnt/database,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/logs"
+```
 On the host we then see:
+```
 Filesystem            Size  Used Avail Use% Mounted on
 /dev/mapper/vg_demooracle1-lv_root
                        35G   15G   19G  46% /
@@ -722,71 +734,103 @@ tmpfs                 4.9G  311M  4.6G   7% /dev/shm
 /dev/sda1             477M   68M  385M  15% /boot
 /dev/sdb               50G  1.6G   46G   4% /mnt/database
 /dev/sdc               50G   71M   47G   1% /mnt/logs
-Mounting and unmounting Images - Example 5:  SQL App Aware mount
+```
+## Mounting and unmounting Images - Example 5:  SQL App Aware mount
 We may want to use App Aware mount to bring our MS SQL database online.
 To do this we take everything we learn in example 3 and add provisioning options to define the app aware mount.
 Here is an example for udsinfo
 We have an application called localdb which is application ID 21090610.
 We list the snaps:
+```
 udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=21090610
+```
 Lets learn just the ID and consistency date.
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=snapshot&appid=21090610" -d "sessionid=$sessionid" | jq -c '.result [] | [.id, .consistencydate]'
 ["22308340","2015-12-08 17:22:00.000"]
 ["22315337","2015-12-09 05:21:59.000"]
 ["22321893","2015-12-09 17:22:10.000"]
 ["22326287","2015-12-10 05:22:16.000"]
+```
 We have chosen to use 22196359.
 App Aware SQL mount to mount point
 We want to mount this to C:\Test\jsontest so we need to learn the current drive letter.
+```
 udsinfo lsbackup 22196359
+```
 Notice the long space in the name of the variable, this is as per the source.
+```
 curl -sS -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22196359"| jq '.result | ."    uniqueid"'
 "dasvol:S:\\"
+```
 The big change is we add provisioning options.   There is an appaware flag but we don't need to use it, since we are using the provisioning options.
+```
 udstask mountimage -image 22196359-host demo-sql-4 -restoreoption 'mountpointperdisk-dasvol:S:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>'
+```
 We put this into a REST command without any URL encoding (leave that to curl):
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=Image_22196358&host=demo-sql-4&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:S:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>" | jq
 {
   "result": "Job_22201771 to mount Image_22196358 completed",
   "status": 0
 }
+```
 And more importantly in SQL Server we see:
 Now it is time to unmount
+```
 udstask unmountimage -image Image_22201771 -delete
 curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22201771&delete" | jq
 {
   "result": "Job_22333339 to unmount Image_22333318 completed",
   "status": 0
 }
+```
 App Aware SQL mount to drive letter
 We have two drives in the source volume:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22330658" | jq '.result | ."    uniqueid"'
 [
   "dasvol:L:\\",
   "dasvol:S:\\"
 ]
+```
 We take the syntax from example 2, but step it up by also doing an App Aware mount of the DB as 'JSONTEST'
 We encase the restore options in single quotes due to the number of backslashes.
+```
 udstask mountimage -image 22330658-host demo-sql-4 -restoreoption 'mountdriveperdiskddasvol:L:\=M:\,mountdriveperdiskddasvol:S:\=N:\,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>'
+```
 Due to some quirk in the URL encoding, we need to encase the restore option in single quotes as well (rather than double quotes, which most of these examples use).
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22330658&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountdriveperdiskddasvol:L:\=P:\,mountdriveperdiskddasvol:S:\=N:\,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>'
+
 {"result":"Job_22334207 to mount Image_22330657 completed","status":0}
+```
 Now it is time to unmount
+```
 udstask unmountimage -image Image_22333318 -delete
+```
+```
 curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22334207&delete" | jq
 {
   "result": "Job_22333339 to unmount Image_22333318 completed",
   "status": 0
 }
+```
 How do we get restore options listed?
 1)  List all my app classes:     udsinfo lsappclass
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsappclass?sessionid=$sessionid" | jq -c '.result [] | [.name]'
 ["OracleGroup"]
 ["SQLServerGroup"]
 ["Oracle"]
 ["SQLServer"]
-2) List all restore options per app class using a target host ID:    udsinfo lsrestoreoptions -applicationtype SQLServer -action mount -targethost 20933867
+```
+2) List all restore options per app class using a target host ID:    
+```
+udsinfo lsrestoreoptions -applicationtype SQLServer -action mount -targethost 20933867
+```
 In the example above, you will need to change the target host to match your own.
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsrestoreoptions?applicationtype=SQLServer&action=mount&targethost=20933867&sessionid=$sessionid" | jq -c '.result [] | [.name]'
 ["restoremacaddr"]
 ["mountdriveperdisk"]
@@ -798,57 +842,93 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsrestoreoptions?application
 ["mountdriveperimage"]
 ["mapdiskstoallclusternodes"]
 ["provisioningoptions"]
+```
 How do we get provisioning options listed?  (note this only works in 7.0 code and higher)
-1)  List all my app classes:     udsinfo lsappclass
-2)  List all provisioning options per app class:    udsinfo lsappclass -name SQLServer
+1)  List all my app classes:     
+```
+udsinfo lsappclass
+```
+2)  List all provisioning options per app class:    
+```
+udsinfo lsappclass -name SQLServer
+```
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsappclass?name=SQLServer&sessionid=$sessionid" | jq -c '.result [] | [.name]'
-Mounting and unmounting Images - Example 6:  SQL App Aware mount of a Consistency Group
+```
+## Mounting and unmounting Images - Example 6:  SQL App Aware mount of a Consistency Group
 We may want to use App Aware mount of  MS SQL Consistency Group.
 This is a group of databases captured at a consistent point in time from a single source host.
 First we learn the Consistency Group ID.
+```
 udsinfo lsconsistgrp
+```
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsconsistgrp?sessionid=$sessionid" | jq -c '.result [] | [.id, .groupname]'
 ["22346859","DemoSQL4"]
+```
 If we know the name of the consistency group we could also just look up that group:
+```
 udsinfo lsconsistgrp DemoSQL4
+```
+```
 curl -sS -w "\n" -k "https://$cdsip/actifio/api/info/lsconsistgrp?argument=DemoSQL4&sessionid=$sessionid" | jq -cr '.result | [.id,.groupname]'
 ["22346859","DemoSQL4"]
+```
 We list the snaps using the group ID as the application ID:
+```
 udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=22346859
+```
 Lets learn just the ID and consistency date.
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=snapshot&appid=22346859" -d "sessionid=$sessionid" | jq -c '.result [] | [.id, .consistencydate]'
 ["22346908","2015-12-11 12:19:10.000"]
+```
 So now we want to mount image  22346908
 We want to mount our CG to C:\Test\jsontest so we need to learn the current drive letter.
+```
 udsinfo lsbackup  22346908
+```
 Notice the long space in the name of the variable, this is as per the source field.
+```
 curl -sS -w "\n" -k "https://$cdsip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22346908" | jq '.result | ."    uniqueid"'
 "dasvol:C:\\"
+```
 The big change is we add provisioning options.   There is an appaware flag but we don't need to use it, since we are using the provisioning options.
 We cannot choose names for the DBs because they are in a group, so instead we use a prefix.  In this example it is jsontest
+```
 udstask mountimage -image 22346908-host demo-sql-4 -restoreoption 'mountpointperdisk-dasvol:C:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><ConsistencyGroupName>testme</ConsistencyGroupName><sqlinstance>DEMO-SQL-4</sqlinstance><dbnameprefix>jsontest</dbnameprefix><recover>true</recover><username></username></provisioning-options>'
+```
 We put this into a REST command without any URL encoding (leave that to curl).  Note in this example we use single quotes around the data that needs encoding.
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22346908&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountpointperdisk-dasvol:C:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><ConsistencyGroupName>testme</ConsistencyGroupName><sqlinstance>DEMO-SQL-4</sqlinstance><dbnameprefix>jsontest</dbnameprefix><recover>true</recover><username></username></provisioning-options>' | jq
 {
   "result": "Job_22347408 to mount Image_22346905 completed",
   "status": 0
 }
+```
 We get this result.   You can see the mount point and three DBs with jsontest added to their names as a prefix.
 Now it is time to unmount
+```
 udstask unmountimage -image Image_22347408 -delete
+```
+```
 curl -sS -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22347408&delete" | jq
 {
   "result": "Job_22333339 to unmount Image_22333318 completed",
   "status": 0
 }
-Mounting and unmounting Images - Example 7:  Oracle App Aware mount
+```
+## Mounting and unmounting Images - Example 7:  Oracle App Aware mount
 We may want to use App Aware mount to bring our Oracle database online.
 To do this we take everything we learn in example 4 and add provisioning options to define the Oracle app aware mount.
 Here is an example for udsinfo
 We have an application called localdb which is application ID 20837997.
 We list the snaps:
+```
 udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=20837997
+```
 Lets learn appid, hostname, app name , backup ID and  consistency date.
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "filtervalue=jobclass=snapshot&appid=20837997"  | jq -c '.result [] | [.appid, .hostname, .appname, .id, .consistencydate]'
 ["20837997","Oracle-Prod","bigdb","22278630","2015-12-08 02:24:20.000"]
 ["20837997","Oracle-Prod","bigdb","22307252","2015-12-08 14:25:34.000"]
@@ -856,10 +936,12 @@ curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=
 ["20837997","Oracle-Prod","bigdb","22320393","2015-12-09 14:24:49.000"]
 ["20837997","Oracle-Prod","bigdb","22325106","2015-12-10 02:25:06.000"]
 ["20837997","Oracle-Prod","bigdb","22331636","2015-12-10 14:25:08.000"]
+```
 We have chosen to use 22187858.
 We are going to let the system choose where to mount the DB to.
 The big change is we add provisioning options.   There is an appaware flag but we don't need to use it, since we are using the provisioning options.
 These are some provisioning options we can set.   To learn how to find more, the commands are listed at the bottom of this example.
+```
 <provisioning-options>
 <databasesid>jsontest</databasesid>
 <username>oracle</username>
@@ -874,13 +956,21 @@ These are some provisioning options we can set.   To learn how to find more, the
 <standalone>false</standalone>
 <envvar></envvar>
 </provisioning-options>
+```
 Here is our udsinfo command.  Note we encase our provisioning options inside single quotes so they don't have escape issues with all the characters in there.
+```
 udstask mountimage -image 22187858-host demo-oracle-4 -restoreoption 'provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
+```
 So we turn this into REST, again letting curl do the URL encoding:
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=22187858&host=demo-oracle-4&sessionid=$sessionid" --data-urlencode "restoreoption=provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>"
+```
 We run the command and get a successful job:
+```
 {"result":"Job_22202340 to mount Image_22187857 completed","status":0}
+```
 Having run the command we can now login to my Oracle server and validate.  Note the job number is in the mount:
+```
 [oracle@demo-oracle-4 ~]$ df
 Filesystem            1K-blocks       Used Available Use% Mounted on
 /dev/mapper/vg_demooracle1-lv_root
@@ -889,7 +979,9 @@ tmpfs                   5065472    1550168   3515304  31% /dev/shm
 /dev/sda1                487652      68810    393242  15% /boot
 /dev/actbigdb_1448949440094_1448931892335/act_staging_vol
                      1784905464 1156455304 537775576  69% /act/mnt/Job_22202340_mountpoint_1448931899072
+```
 We set SID, login and verify
+```
 [oracle@demo-oracle-4 ~]$ export ORACLE_SID=jsontest
 [oracle@demo-oracle-4 ~]$ sqlplus / as sysdba
 SQL> @verifyDatabase.sql
@@ -903,23 +995,39 @@ DATABASE_STATUS   INSTANCE_ROLE      ACTIVE_ST BLO
         1 jsontest demo-oracle-4
 11.2.0.1.0   30-NOV-15 OPEN NO       1 STARTED ALLOWED    NO
 ACTIVE   PRIMARY_INSTANCE   NORMAL    NO
+```
 When finished, we can get rid of the mount:
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/unmountimage" --data-urlencode "image=Image_22202340" -d "delete&sessionid=$sessionid" | jq
 {
   "result": "Job_22202374 to unmount Image_22202340 completed",
   "status": 0
 }
+```
 How do we get restore options listed?
-1)  List all my app classes:     udsinfo lsappclass
-2) List all restore options per app class using a target host ID:    udsinfo lsrestoreoptions -applicationtype Oracle-action mount -targethost 20933867
+1)  List all my app classes:     
+```
+udsinfo lsappclass
+```
+2) List all restore options per app class using a target host ID:    
+```
+udsinfo lsrestoreoptions -applicationtype Oracle-action mount -targethost 20933867
+```
 In the example above, you will need to change the target host to match your own.
 How do we get provisioning options listed?
-1)  List all my app classes:     udsinfo lsappclass
-2)  List all provisioning options per app class:    udsinfo lsappclass Oracle
-Mounting and unmounting Images - Example 8:  Oracle App Aware mount with recovery time
+1)  List all my app classes:     
+```
+udsinfo lsappclass
+```
+2)  List all provisioning options per app class:    
+```
+udsinfo lsappclass Oracle
+```
+## Mounting and unmounting Images - Example 8:  Oracle App Aware mount with recovery time
 We may want to use App Aware mount to bring our Oracle database online and roll the logs forward to a particular point in time.
 When doing this we need to use the host points in time.   While this is clearly shown in the Actifio Desktop, in the CLI you need to ensure you work with the correct time range.
 In this example the user 'av' has a timezone of Melbourne Australia, while the source host is in the Boston USA timezone.
+```
 Actifio:sa-hq:av> udsinfo lsuser av | grep time
 timezone Australia/Melbourne
 Actifio:sa-hq:av> udsinfo lsbackup Image_22349754 | grep "zone"
@@ -929,27 +1037,40 @@ Actifio:sa-hq:av> udsinfo lsbackup Image_22349754 | grep pit
   endpit 2015-12-12 04:04:51
   hostbeginpit 2015-12-11 00:03:17
   hostendpit 2015-12-11 12:04:51
+```
 We can grab the host pit range quite easily with this REST command:
-curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22349754" | jq  '.result | [."  timezone", ."  hostbeginpit", ."  hostendpit" ]'
+```
+curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22349754" | jq  '.result | [."  timezone", ."  
+hostbeginpit", ."  hostendpit" ]'
 [
   "GMT-0500",
   "2015-12-11 00:03:17",
   "2015-12-11 12:04:51"
 ]
+```
 Once we have selected out recovery time we can use this udstask command to mount the image:
+```
 udstask mountimage -image Image_22349754 -host demo-oracle-4 -label testav -recoverytime "2015-12-11 04:10:27" -restoreoption 'provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><password type="encrypt">*******</password><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
+```
 The REST version of this needed two data-url encode sections due to the recovery time
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=Image_22349754&host=demo-oracle-4&label=jsontest&sessionid=$sessionid" --data-urlencode 'recoverytime=2015-12-11 04:10:27' --data-urlencode 'restoreoption=provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><password type="encrypt">*******</password><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
+```
 One way to validate the command was issued correctly on the target host is to check the UDSAgent log with this command.
+```
 cat /var/act/log/UDSAgent.log | grep "recover database until time"
+```
 We should see an entry like this where the host time specified in the original command can clearly be seen.  Note the mount point contains the job number which makes it easier to find the correct entry.
+```
 run { catalog start with '/act/mnt/Job_22362562_mountpoint_1449888060617/archivelog' noprompt; catalog start with '/act/mnt/Job_22362562_mountpoint_1449888103502/archivelog' noprompt; recover database until time "to_date('201512110410','yyyymmddhh24mi')"; }
-Mounting and unmounting Images - Example 9:  Oracle App Aware mount with re-protection
+```
+## Mounting and unmounting Images - Example 9:  Oracle App Aware mount with re-protection
 We may want to use App Aware mount to bring our Oracle database online and roll the logs forward to a particular point in time.
 We also want to choose where it mounts.
 We also want to re-protect it.
 When doing this we need to use the host points in time.   While this is clearly shown in the Actifio Desktop, in the CLI you need to ensure you work with the correct time range.
 In this example the user 'av' has a timezone of Melbourne Australia, while the source host is in the Boston USA timezone.
+```
 Actifio:sa-hq:av> udsinfo lsuser av | grep time
 timezone Australia/Melbourne
 Actifio:sa-hq:av> udsinfo lsbackup Image_22370949 | grep "zone"
@@ -959,11 +1080,15 @@ Actifio:sa-hq:av> udsinfo lsbackup Image_22370949 | grep pit
   endpit 2015-12-14 16:02:18
   hostbeginpit 2015-12-14 12:03:58
   hostendpit 2015-12-14 16:02:18
+```
 We also want to choose where it mounts:
+```
 udsinfo lsbackup Image_22370949 | grep dasvol
     uniqueid dasvol:smalldb
     uniqueid dasvol:smalldb_archivelog
+```
 We can grab the host pit range and dasvol details quite easily with this REST command:
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22370949" | jq  '.result | [."  timezone", ."  hostbeginpit", ."  hostendpit",."    uniqueid" ]'
 [
   "GMT-0500",
@@ -974,6 +1099,7 @@ curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=
     "dasvol:smalldb_archivelog"
   ]
 ]
+```
 We choose a recovery time of host time: 2015-12-14 12:17:27
 We want to mount:
 smalldb to /mnt/smalldb
@@ -981,10 +1107,13 @@ smalldb_acrchivelog to /mnt/smalldb_logs
 We want to re-protect using the Gold Template with the Local Profile
 Gold has an SLT ID of 8629
 Local Profile has an SLP ID of 51
-[18:10:38] sa-hq1:~ # udsinfo lsslt | grep Gold
+```
+udsinfo lsslt | grep Gold
     8629 true     Gold Policy            Gold
-[18:10:49] sa-hq1:~ # udsinfo lsslp | grep Local
+udsinfo lsslp | grep Local
       51 Local profile           Local Profile  act_per_pool000                none        sa-hq
+```
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsslt" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .name]'
 ["103","Platinum"]
 ["8629","Gold"]
@@ -997,21 +1126,33 @@ curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsslp" -d "sessionid=$se
 ["51","Local Profile"]
 ["8812","Remote Profile"]
 ["20461775","AWS Profile"]
+```
 This creates this command that effectively has three sections:
 Mountpoints:
+```
 mountpointperdisk-dasvol:smalldb=/mnt/smalldb,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/smalldb_logs
+```
 Reprotect info:
+```
 reprotect=true,sltid=8629,slpid=51
+```
 Provisioning options for the app aware mounts:
+```
 <provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>
+```
 Giving us this command:
+```
 udstask mountimage -image Image_22370949-host demo-oracle-4 -label testav -recoverytime "2015-12-14 12:17:27" -restoreoption 'mountpointperdisk-dasvol:smalldb=/mnt/smalldb,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/smalldb_logs,reprotect=true,sltid=8629,slpid=51,provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
+```
 The REST version of this needed two data-url encode sections due to the recovery time causing some quirks:
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=Image_22370949&host=demo-oracle-4&label=jsontest&sessionid=$sessionid" --data-urlencode 'recoverytime=2015-12-14 12:17:27'--data-urlencode'restoreoption=mountpointperdisk-dasvol:smalldb=/mnt/smalldb,mountpointperdisk-dasvol:smalldb_archivelog=/mnt/smalldb_logs,reprotect=true,sltid=8629,slpid=51,provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><password type="encrypt">*******</password><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
 {"result":"Job_22375641 to mount Image_22370949 completed","status":0}
+```
 Now there are several things we need to check after this:
 1)  Did we get the right mount point?
 On the target host we run:
+```
 [oracle@demo-oracle-4 ~]$ df
 Filesystem           1K-blocks     Used Available Use% Mounted on
 /dev/mapper/vg_demooracle1-lv_root
@@ -1020,63 +1161,98 @@ tmpfs                  5065472   310180   4755292   7% /dev/shm
 /dev/sda1               487652    68810    393242  15% /boot
 /dev/sdb              51475068  2031900  46821728   5% /mnt/smalldb
 /dev/sdc              51475068    82992  48770636   1% /mnt/smalldb_logs
+```
 2)  Did the logs roll forward?
 On the target host we run:
+```
 cat /var/act/log/UDSAgent.log | grep "recover database until time"
+```
 We should see an entry like this where the host time specified in the original command can clearly be seen.  Note the mount point contains the job number which makes it easier to find the correct entry.
+```
 run { catalog start with '/act/mnt/Job_22362562_mountpoint_1449888060617/archivelog' noprompt; catalog start with '/act/mnt/Job_22362562_mountpoint_1449888103502/archivelog' noprompt; recover database until time "to_date('201512110410','yyyymmddhh24mi')"; }
+```
 3)  Did we get a new application?
 Lets look for apps with our new DB name and target host name.
 udsinfo lsapplication -filtervalue "appname=jsontest&hostname=demo-oracle-4"
 In REST that's:
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsapplication" --data-urlencode "filtervalue=appname=jsontest&hostname=demo-oracle-4" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .appname]'
 ["22375678","jsontest"]
+```
 There is our application ID: 22375678
 4)  Does the new application have any snapshots?
+```
 udsinfo lsbackup -filtervalue "appid=22375678&jobclass=snapshot"
+```
 In REST thats:
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=appid=22375678" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .appname, .jobclass, .consistencydate]'
 ["22375693","jsontest","snapshot","2015-12-15 11:22:31.000"]
+```
 If you do not find a snapshot, maybe one is still being created or maybe your new application did not get protected.
 Once we are finished we can start tearing this all down:
 5)  Lets clean them up:
+```
 usdtask expireimage -image 22375693
+
 In REST that is:
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/expireimage" -d "image=22375693" -d "sessionid=$sessionid"
 {"result":"Job_22375751 to expire Image_22375691 completed","status":0}
+```
 6)  Lets get rid of the application:
+```
 udstask rmapplication 22375678
+```
 In REST that is:
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/rmapplication" -d "argument=22375678" -d "sessionid=$sessionid"
-Mounting and unmounting Images - Example 10:  Oracle App Aware mount to RAC
+```
+## Mounting and unmounting Images - Example 10:  Oracle App Aware mount to RAC
 We may want to use App Aware mount to bring our Oracle database online to a RAC cluster.
 We need to assemble several pieces of information to do this.
 First up the RAC members need to be defined to Actifio as hosts.   We need to know their IP addresses.
 We also need to have an ASM backup.   In this example we know Image_22336426 is ASM as per this attribute:
-[22:55:09] sa-hq1:~ # udsinfo lsbackup Image_22336426 | grep isasm
+```
+udsinfo lsbackup Image_22336426 | grep isasm
 isasm true
+```
 We are interested in the isasmbeing true
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22336426" | jq -c '.result | [.id, .isasm, .consistencydate, ."  beginpit", ."  endpit" ]'
 ["22336430","true","2015-12-11 04:06:27.000","2015-12-11 04:06:27","2015-12-11 14:01:55"]
+```
 In this example the ASM node list is 172.24.1.231  and 172.24.1.232
 So the CLI to mount to the two nodes is:
+```
 udstask mountimage -image Image_22336426 -host oracle-rac-1 -label testav -restoreoption 'asmracnodelist=172.24.1.231:172.24.1.232,provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/oracle/11.2.0/product/dbhome_1</orahome><tnsadmindir>/crs/11.2.0/product/grid_home/network/admin</tnsadmindir><totalmemory>1024</totalmemory><sgapct>70</sgapct><tnsip>oracle-rac-scan</tnsip><tnsport>1521</tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
+```
 The REST version is:
+```
 curl -sS -w "\n" -k -XPOST -G "https://$cdsip/actifio/api/task/mountimage" -d "image=Image_22336426&host=oracle-rac-1&sessionid=$sessionid" --data-urlencode "restoreoption=asmracnodelist=172.24.1.231:172.24.1.232,provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/oracle/11.2.0/product/dbhome_1</orahome><tnsadmindir>/crs/11.2.0/product/grid_home/network/admin</tnsadmindir><totalmemory>1024</totalmemory><sgapct>70</sgapct><tnsip>oracle-rac-scan</tnsip><tnsport>1521</tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>"
+
 {"result":"Job_22349396 to mount Image_22336426 completed","status":0}
+```
 On RAC node 1 we confirm like this:
+```
 Every 2.0s: srvctl status database -d jsontest; echo ""; ps -ef | grep pmon | grep -v grep                                                                                           Thu Dec 10 23:13:18 2015
 Instance jsontest1 is running on node oracle-rac-1
 Instance jsontest2 is running on node oracle-rac-2
 oracle   15495     1  0 23:12 ?        00:00:00 ora_pmon_jsontest1
 grid     25857     1  0 Oct17 ?        00:09:53 asm_pmon_+ASM1
+```
 On RAC Node 2 we confirm like this:
+```
 Every 2.0s: ps -ef | grep pmon | grep -v grep ; echo ""; echo ""; df -h                                                                                                              Thu Dec 10 23:13:52 2015
 grid     14929     1  0 Oct17 ?        00:08:58 asm_pmon_+ASM2
 oracle   18849     1  0 23:12 ?        00:00:00 ora_pmon_jsontest2
-Hosts:   List them and get their connector version - example commands:
+```
+## Hosts:   List them and get their connector version - example commands:
 Lets find what version connector is installed on our hosts:
+```
 udsinfo lshost -filtervalue hasagent=true
+```
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&filtervalue=hasagent=true" ​| jq -c '.result[] | [.id, .hostname, .ostype, .connectorversion]'
 ["4497","hq-vcenter","Win32","6.1.7.60269"]
 ["4503","sa-esx1.sa.actifio.com","",""] 
@@ -1091,7 +1267,9 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&
 ["17475380","sql-masking-dev","Win32","6.1.8.61044"]
 ["17475383","sql-masking-prod","Win32","6.1.7.60269"]
 ["17555397","sql-masking-stage","Win32","6.1.7.60269"]
+```
 How about for a specific host:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq 
 {
   "result": {
@@ -1128,11 +1306,17 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&
   },
   "status": 0
 }
+```
 We just want the connector version:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq '.result | .connectorversion'
 "6.1.7.60269"
+```
 What are the latest connectors?
+```
 udsinfo lsavailableconnector -filtervalue latest=true
+```
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsavailableconnector?sessionid=$sessionid&filtervalue=latest=true"| jq -c '.result[] | [.ostype, .displayname]'
 ["solaris_sparc","6.2.0.63215"]
 ["aix","6.2.0.63215"]
@@ -1141,26 +1325,45 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsavailableconnector?session
 ["linux","6.2.0.63215"]
 ["win32","6.2.0.63215"]
 ["linux_x86","6.2.0.63215"]
+```
 How about just for Linux?
+```
 udsinfo lsavailableconnector -filtervalue ostype=linux\&latest=true
+```
+```
 curl -sS -w "\n" -k -G "https://$cdsip/actifio/api/info/lsavailableconnector" --data-urlencode "filtervalue=latest=true&ostype=linux"-d "sessionid=$sessionid" | jq -c '.result[] | [.ostype, .displayname]'
 ["linux","6.2.0.63215"]
+```
 Time to upgrade demo-oracle-4 to the latest release.
 This command returns immediately but it takes a few minutes for the new version to show.
+```
 udstask upgradehostconnector -hosts demo-oracle-4
+```
+```
 curl -s -w "\n" -k -XPOST "https://$cdsip/actifio/api/task/upgradehostconnector?sessionid=$sessionid&hosts=demo-oracle-4"| jq
 {
   "status": 0
 }
+```
 Wait a few minutes and check again:
+
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq '.result | .connectorversion'
 "6.2.0.63215"
-Fetching pool details - example commands:
-To get pools we normally use this udsinfo command:   udsinfo lsdiskpool
+```
+```
+## Fetching pool details - example commands:
+To get pools we normally use this udsinfo command:   
+```
+udsinfo lsdiskpool
+```
 Raw output from lsdiskpool:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"
 {"result":[{"id":"71","modifydate":"2015-10-01 04:00:57.144","warnpct":"77","name":"act_pri_pool000","safepct":"90","mdiskgrp":"act_pri_pool000"},{"id":"72","modifydate":"2015-08-30 10:08:12.332","warnpct":"90","name":"act_ded_pool000","safepct":"100","mdiskgrp":"act_ded_pool000"},{"id":"73","modifydate":"2015-10-01 03:42:03.440","warnpct":"81","name":"act_per_pool000","safepct":"85","mdiskgrp":"act_per_pool000"}],"status":0}
+```
 Processed with jq
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq
 {
   "result": [
@@ -1191,11 +1394,15 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessio
   ],
   "status": 0
 }
+```
 First up if we look at the output we want to understand there are two sections, the resultsection and the statussection.
 If you want the result or the status, ask for it you get just that section.   The status section is rather short.
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.status'
 0
+```
 If we grab the result section, lets ask for what is inside the box in the results section,  this is normally what is most interesting:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.result []'
 {
   "id": "71",
@@ -1221,22 +1428,30 @@ curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessio
   "safepct": "85",
   "mdiskgrp": "act_per_pool000"
 }
+```
 We can flatten the output with -c (compact).   Because there are not many fields, this flattens nicely.   Most output have lots of fields so spread across multiple lines.
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -c '.result []'
 {"id":"71","modifydate":"2015-10-01 04:00:57.144","warnpct":"77","name":"act_pri_pool000","safepct":"90","mdiskgrp":"act_pri_pool000"}
 {"id":"72","modifydate":"2015-08-30 10:08:12.332","warnpct":"90","name":"act_ded_pool000","safepct":"100","mdiskgrp":"act_ded_pool000"}
 {"id":"73","modifydate":"2015-10-01 03:42:03.440","warnpct":"81","name":"act_per_pool000","safepct":"85","mdiskgrp":"act_per_pool000"}
+```
 One of the nice things is we can keep piping the output for further processing without running jq twice.   In this example we first strip out the results and then ask for just the pool names:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.result [] | .name'
 "act_pri_pool000"
 "act_ded_pool000"
 "act_per_pool000"
+```
 In the output above we got double quotes, so if we add -r for raw we lose those and get just the names.
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -r '.result [] | .name'
 act_pri_pool000
 act_ded_pool000
 act_per_pool000
+```
 But if we ask for two things, they get put on separate lines.
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -r '.result [] | .name, .id'
 act_pri_pool000
 71
@@ -1244,27 +1459,36 @@ act_ded_pool000
 72
 act_per_pool000
 73
+```
 If we want them on one line, we can define this like this:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '.result [] | [.name, .id]'
 ["act_pri_pool000","71"]
 ["act_ded_pool000","72"]
 ["act_per_pool000","73"]
+```
 If we want the output in CSV, we can do this:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '.result [] | [.name, .id] | @csv'
 "act_pri_pool000","71"
 "act_ded_pool000","72"
 "act_per_pool000","73"
+```
 If you want to add out own header lines, we can do this:
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '["PoolName", "PoolID"], (.result [] | [.name, .id]) | @csv'
 "PoolName","PoolID"
 "act_pri_pool000","71"
 "act_ded_pool000","72"
 "act_per_pool000","73"
+```
 We still have double quotes.   They are not being removed by 'raw' option.
 We can use sed:   sed 's/\"//g'
 NOTE - double quotes in CSV are both legal and necessary.   Host names and App Names contain commas.  The double quotes stop them being used as field delimiters.
+```
 curl -s -w "\n" -k "https://$cdsip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '["PoolName", "PoolID"], (.result [] | [.name, .id]) | @csv' |  sed 's/\"//g'
 PoolName,PoolID
 act_pri_pool000,71
 act_ded_pool000,72
 act_per_pool000,73
+```
