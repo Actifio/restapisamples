@@ -5,8 +5,8 @@ To show some REST API examples.   Each example shows a udsinfo or udstask comman
 
 ## JQ JSON Parser
 All examples use the JQ parser.
-The JQ JSON parser is portable and easy to use and can parse JSON very nicely
-It is open source and free to use
+The JQ JSON parser is portable and easy to use and can parse JSON very nicely.  
+It is open source and free to use. 
 Because some commands use a number of characters that cannot normally be used in HTTPS URLs, you have the choice of using quoting and special handling or URL encoding.
 
 All examples in this article do NOT use URL encoding.
