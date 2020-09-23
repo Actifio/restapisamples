@@ -64,19 +64,19 @@ curl -sS -w "\n" -k -G  "https://$vdpip/actifio/api/info/lsbackup" --data-urlenc
 ### What Curl options are used in these examples?
 If using Curl we use the following
 Option  Purpose
-* -s  Silent Mode. This stops download progress messages appearing on the screen.
-* -S  Print errors that might be stopped by -s
-* -w "\n"   Print a new line at the end of the output
-* -k  Work with self signed certificates
-* -G  Send the -d data with a HTTP GET
-* -d   Used for additional data that we separate out due to encoding requirements
+* -s  : Silent Mode. This stops download progress messages appearing on the screen.
+* -S  : Print errors that might be stopped by -s
+* -w "\n" :   Print a new line at the end of the output
+* -k : Work with self signed certificates
+* -G  : Send the -d data with a HTTP GET
+* -d  :  Used for additional data that we separate out due to encoding requirements
 
 ## Can I use wget instead of curl?
 The examples here all use curl, but you can use wget.  Here are some working examples:
 The options used are:
-* --no-check-certificate   Because the certificate used is self-signed.
-* -q       Quiet option to stop so many messages getting printed to the screen
-* -O -   To force output to be printed to the screen  (you need the trailing dash after -O)
+* --no-check-certificate  : Because the certificate used is self-signed.
+* -q  : Quiet option to stop so many messages getting printed to the screen
+* -O - : To force output to be printed to the screen  (you need the trailing dash after -O)
 
 ### Check the cluster is up:
 ```
@@ -195,7 +195,10 @@ We want just the session ID, so use JQ to parse it out, asking just for the sess
 curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq  '.sessionid'
 "fd8c3c03-5f64-4126-a6c8-27e60dfbc44e"
 ```
-If we want to remove the double quotes, use -r like this:    jq -r  '.sessionid'
+If we want to remove the double quotes, use -r like this:    
+```
+jq -r  '.sessionid'
+```
 ```
 curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq -r  '.sessionid'
 24a87504-0791-4af2-87e1-f6cc00f30748
@@ -1072,7 +1075,7 @@ When doing this we need to use the host points in time.   While this is clearly 
 In this example the user 'av' has a timezone of Melbourne Australia, while the source host is in the Boston USA timezone.
 ```
 Actifio:sa-hq:av> udsinfo lsuser av | grep time
-timezone Australia/Melbourne
+  timezone Australia/Melbourne
 Actifio:sa-hq:av> udsinfo lsbackup Image_22370949 | grep "zone"
   timezone GMT-0500
 Actifio:sa-hq:av> udsinfo lsbackup Image_22370949 | grep pit
@@ -1083,9 +1086,9 @@ Actifio:sa-hq:av> udsinfo lsbackup Image_22370949 | grep pit
 ```
 We also want to choose where it mounts:
 ```
-udsinfo lsbackup Image_22370949 | grep dasvol
-    uniqueid dasvol:smalldb
-    uniqueid dasvol:smalldb_archivelog
+Actifio:sa-hq:av> udsinfo lsbackup Image_22370949 | grep dasvol
+  uniqueid dasvol:smalldb
+  uniqueid dasvol:smalldb_archivelog
 ```
 We can grab the host pit range and dasvol details quite easily with this REST command:
 ```
@@ -1108,10 +1111,10 @@ We want to re-protect using the Gold Template with the Local Profile
 Gold has an SLT ID of 8629
 Local Profile has an SLP ID of 51
 ```
-udsinfo lsslt | grep Gold
-    8629 true     Gold Policy            Gold
-udsinfo lsslp | grep Local
-      51 Local profile           Local Profile  act_per_pool000                none        sa-hq
+Actifio:sa-hq:av> udsinfo lsslt | grep Gold
+  8629 true     Gold Policy            Gold
+Actifio:sa-hq:av> udsinfo lsslp | grep Local
+  51 Local profile           Local Profile  act_per_pool000                none        sa-hq
 ```
 ```
 curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsslt" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .name]'
@@ -1173,13 +1176,16 @@ run { catalog start with '/act/mnt/Job_22362562_mountpoint_1449888060617/archive
 ```
 3)  Did we get a new application?
 Lets look for apps with our new DB name and target host name.
+```
 udsinfo lsapplication -filtervalue "appname=jsontest&hostname=demo-oracle-4"
+```
 In REST that's:
 ```
 curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsapplication" --data-urlencode "filtervalue=appname=jsontest&hostname=demo-oracle-4" -d "sessionid=$sessionid" | jq -c  '.result [] | [.id, .appname]'
 ["22375678","jsontest"]
 ```
 There is our application ID: 22375678
+
 4)  Does the new application have any snapshots?
 ```
 udsinfo lsbackup -filtervalue "appid=22375678&jobclass=snapshot"
@@ -1194,7 +1200,7 @@ Once we are finished we can start tearing this all down:
 5)  Lets clean them up:
 ```
 usdtask expireimage -image 22375693
-
+```
 In REST that is:
 ```
 curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/expireimage" -d "image=22375693" -d "sessionid=$sessionid"
@@ -1217,7 +1223,7 @@ We also need to have an ASM backup.   In this example we know Image_22336426 is 
 udsinfo lsbackup Image_22336426 | grep isasm
 isasm true
 ```
-We are interested in the isasmbeing true
+We are interested in this:  isasmbeing true
 ```
 curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22336426" | jq -c '.result | [.id, .isasm, .consistencydate, ."  beginpit", ."  endpit" ]'
 ["22336430","true","2015-12-11 04:06:27.000","2015-12-11 04:06:27","2015-12-11 14:01:55"]
@@ -1351,7 +1357,7 @@ Wait a few minutes and check again:
 curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lshost?sessionid=$sessionid&argument=demo-oracle-4"| jq '.result | .connectorversion'
 "6.2.0.63215"
 ```
-```
+
 ## Fetching pool details - example commands:
 To get pools we normally use this udsinfo command:   
 ```
