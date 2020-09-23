@@ -17,13 +17,13 @@ All examples will use variables with curl.   This means the IP address is always
 ```
 #!/bin/bash
 # IP is hardset but could be fetched as a parm like this:
-# read -p "IP address or name of Actifio Appliance: " cdsip
-cdsip=172.24.1.180
+# read -p "IP address or name of Actifio Appliance: " vdpip
+vdpip=172.24.1.180
 # We presume the user has logged in with AD user, else we can prompt for user as well
-# read -p "Username to login to Actifio Appliance: " cdsuser
-cdsuser=$(whoami)
-read -s -p "Password for user $cdsuser on $vdpip: " cdspass
-cdskey=727b5563-adf6-4450-9b60-24276194ddb5
+# read -p "Username to login to Actifio Appliance: " vdpuser
+vdpuser=$(whoami)
+read -s -p "Password for user $vdpuser on $vdpip: " vdppass
+vdpkey=727b5563-adf6-4450-9b60-24276194ddb5
 ```
 
 ## Options to handle URLs
@@ -55,7 +55,7 @@ curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessioni
 Another example is fetching a session ID.   We can use this command.
 Note the URL is double quoted, but contains no backslashes)
 ```
-sessionid=$(curl -w "\n" -s -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq -r '.sessionid')
+sessionid=$(curl -w "\n" -s -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey" | jq -r '.sessionid')
 ```
 There may be other commands that use characters that need to be URL encoded, so we can use a syntax like this:
 ```
@@ -91,12 +91,12 @@ wget --no-check-certificate -q -O -  https://172.24.1.180/actifio/api/version| j
 
 In this example we double quote the URL to avoid the need to use backslashes.  We then push to jq to pull out just the session ID
 ```
-wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq  '.sessionid'
+wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey" | jq  '.sessionid'
 "a45a601d-701c-4f81-9da8-5f1802d87f6e"
 ```
 We can place the session ID into a variable.  Make sure to use -r to remove the double quotes.
 ```
-sessionid=$(wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey" | jq -r '.sessionid')
+sessionid=$(wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey" | jq -r '.sessionid')
 ```
 ### List all running jobs:
 Again we just double quote the URL
@@ -145,7 +145,7 @@ $ curl -s -k  https://172.24.1.180/actifio/api/version| jq -r '.result'
 ## Fetching Session ID
 To get a session ID we do this:
 ```
-curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"
 ```
 Normally we get this:
 ```
@@ -153,7 +153,7 @@ Normally we get this:
 ```
 We pipe the output to jq
 ```
-curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq 
+curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq 
 ```
 The output is:
 ```
@@ -192,24 +192,24 @@ The output is:
 ```
 We want just the session ID, so use JQ to parse it out, asking just for the sessionid using:      jq  '.sessionid'
 ```
-curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq  '.sessionid'
+curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq  '.sessionid'
 "fd8c3c03-5f64-4126-a6c8-27e60dfbc44e"
 ```
 If we want to remove the double quotes, use -r like this:    jq -r  '.sessionid'
 ```
-curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq -r  '.sessionid'
+curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq -r  '.sessionid'
 24a87504-0791-4af2-87e1-f6cc00f30748
 ```
 So now we get to this.  We could add error handling, if the output is null, it is because the password didn't work or we couldn't find the device.
 Since we pull the sessionid from the output, either we got a session id (success) or we didn't (failure).
 ```
-sessionid=$(curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$cdsuser&password=$cdspass&vendorkey=$cdskey"| jq -r '.sessionid')
+sessionid=$(curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq -r '.sessionid')
 if
 [ -n "$sessionid" ] && [ "$sessionid' != "null" ]
 then
-echo "Login for user $cdsuser to $vdpip succeeded"
+echo "Login for user $vdpuser to $vdpip succeeded"
 else
-echo "Login for user $cdsuser to $vdpip failed"
+echo "Login for user $vdpuser to $vdpip failed"
 fi
 ```
 # Listing jobs - example commands:
