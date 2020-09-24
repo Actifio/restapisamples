@@ -1349,7 +1349,7 @@ We need to get this information from the Google Cloud Platform Console.
 
 #### JSON file
 
-We download this from the Serbive Account sectiot of the IAM console.
+We download this from the Service Account section of the IAM console.
 In this example we save it as a file avkey.json
 Note that while it is not shown as mandatory, it is in reality a mandatory requirement.
 
