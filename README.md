@@ -1346,6 +1346,18 @@ The output will show which fields are needed:
 | privateIpAddresses | string |    
 
 We need to get this information from the Google Cloud Platform Console.
+We can have mutiple nics, so we use syntax like this for each one (from 0 upwards):
+
+```
+nicInfo0-NetworkId=$NetworkId0,nicInfo0-subnetId=$SubnetId0,nicInfo0-privateIpAddresses=$privateip0,
+nicInfo1-NetworkId=$NetworkId1,nicInfo0-subnetId=$SubnetId1,nicInfo0-privateIpAddresses=$privateip1,
+nicInfo2-NetworkId=$NetworkId2,nicInfo0-subnetId=$SubnetId2,nicInfo0-privateIpAddresses=$privateip2
+```
+The private IP address is not mandatory, so simply omit the field if not needed.
+In our examples we use only one interface, with no private IP, so we get:
+```
+nicInfo0-networkId=$gcpNetworkID,nicInfo0-subnetId=$gcpSubnetID
+```
 
 #### JSON file
 
