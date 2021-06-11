@@ -633,7 +633,7 @@ We might want to mount using mount points rather than drive letters.
 Taking the same image and host from Example 2, this is the udsinfo command.
 We take the L:\ and mount it to C:\Test\Data  and we take the S:\ and we mount it to C:\Test\Logs
 ```
-udstask mountimage -image 22185180 -host demo-sql-4 -restoreoption'mountpointperdisk-dasvol:L:\=C:\Test\Data,mountpointperdisk-dasvol:S:\=C:\Test\Logs'
+udstask mountimage -image 22185180 -host demo-sql-4 -restoreoption "mountpointperdisk-dasvol:L:\=C:\Test\Data,mountpointperdisk-dasvol:S:\=C:\Test\Logs"
 ```
 Which gives us this command:
 ```
@@ -1384,6 +1384,47 @@ The resulting command looks like this:
 ```
 udstask mountimage -image $imageid -systemprops "vmname=$gcpNewVMName, regionCode=$gcpRegion,zone=$gcpZone,nicInfo0-subnetId=$gcpSubnetID,isPublicIp=false,cloudtype=gcp,nicInfo0-networkId=$gcpNetworkID,volumetype=$gcpVolumeType,GCPkeys=$gcpkeyfile" -nowait
 ```
+
+## Mounting to Containers - Example 12
+
+To mount to a Container, we just add **-container** to our mount command.  If we want to limit which hosts can access the mount, then we can specify this using the **-host** parm.   So in this example we present **Image_0022259** to IP addresses **10.1.1.1** and **10.2.2.2**.  If we want to add more IPs, just comma separate them:
+```
+udstask mountimage -image Image_0022259 -host "10.1.1.1,10.2.2.2" -container -nowait
+```
+The equivalent API command would look like this:
+```
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&host=10.1.1.1,10.2.2.2&sessionid=$sessionid"
+```
+Note you can also specify a range with a /xx subnet
+```
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&host=10.1.1.1/24,10.2.2.2/24&sessionid=$sessionid"
+```
+If you want any IP to be able to get the mount so Target Host  is * (Any host), then drop the host field:
+```
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&sessionid=$sessionid"
+```
+
+### Specifying mount points
+
+If we want to specify mount points, the udstask mountimage command you want looks like this, where we take the volume **/dev/vgdata/mysqldata** and suggest the host use this mount point:  **/mount/it/here**
+```
+udstask mountimage -image Image_0111783 -container -restoreoption "mountpointperdisk-dasvol:/dev/vgdata/mysqldata=/mount/it/here"
+```
+If you have multiple volumes in the image, then just comma separate them like this:
+```
+mountpointperdisk-dasvol:SOURCE1=TARGET1,mountpointperdisk-dasvol:SOURCE2=TARGET2,mountpointperdisk-dasvol:SOURCE3=TARGET3
+```
+So with two of them it would look like:
+```
+udstask mountimage -image Image_0111783 -container -restoreoption "mountpointperdisk-dasvol:trntrsau/ifmxvar=/ifmx/var, mountpointperdisk-dasvol:trntrsau/ifmxetc=/ifmx/etc"
+```
+Which gives us this command where the blue are the source volumes and the red are the target paths.
+```
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:trntrsau/ifmxvar=/ifmx/var,mountpointperdisk-dasvol:trntrsau/ifmxetc=/ifmx/etc"
+```
+
+
+
 
 
 ## Hosts:   List them and get their connector version - example commands:
