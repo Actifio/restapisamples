@@ -1420,11 +1420,24 @@ The equivalent API command would look like this:
 ```
 curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&host=10.1.1.1,10.2.2.2&sessionid=$sessionid"
 ```
-Note you can also specify a range with a /xx subnet
+
+### Opening access to a subnet range
+Note you can also specify a range with a /xx subnet:
+```
+udstask mountimage -image Image_0022259 -host "10.1.1.0/24,10.2.2.0/24" -container -nowait
+```
+The equivalent API command would look like this:
 ```
 curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&host=10.1.1.0/24,10.2.2.0/24&sessionid=$sessionid"
 ```
+
+### Opening access to any host
+
 If you want any IP to be able to get the mount so Target Host  is * (Any host), then drop the host field:
+```
+udstask mountimage -image Image_0022259 -container -nowait
+```
+The equivalent API command would look like this:
 ```
 curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&sessionid=$sessionid"
 ```
