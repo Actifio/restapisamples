@@ -1422,7 +1422,7 @@ curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "c
 ```
 Note you can also specify a range with a /xx subnet
 ```
-curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&host=10.1.1.1/24,10.2.2.2/24&sessionid=$sessionid"
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&host=10.1.1.0/24,10.2.2.0/24&sessionid=$sessionid"
 ```
 If you want any IP to be able to get the mount so Target Host  is * (Any host), then drop the host field:
 ```
