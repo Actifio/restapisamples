@@ -14,6 +14,17 @@ To show some REST API examples.   Each example shows a udsinfo or udstask comman
 **[Example 2: Mount using Drive Letters](#example-2-mount-using-drive-letters)**<br>
 **[Example 3: Mount using mount points](#example-3-mount-using-mount-points)**<br>
 **[Example 4: Linux mount using mount points](#example-4-linux-mount-using-mount-points)**<br>
+**[Example 5: SQL App Aware mount](#example-5-sql-app-aware-mount)**<br>
+**[Example 6: SQL App Aware mount of a Consistency Group](#example-6-sql-app-aware-mount-of-a-consistency-group)**<br>
+**[Example 7: Oracle App Aware mount](#example-7-oracle-app-aware-mount)**<br>
+**[Example 8: Oracle App Aware mount with recovery time](#example-8-oracle-app-aware-mount-with-recovery-time)**<br>
+**[Example 9: Oracle App Aware mount with reprotection](#example-9-oracle-app-aware-mount-with-reprotection)**<br>
+**[Example 10: Oracle App Aware mount to RAC](#example-10-oracle-app-aware-mount-to-rac)**<br>
+**[Example 11: Mounting system state images](#example-11-mounting-system-state-images)**<br>
+**[Example 12: Mounting to Containers ](#example-12-mounting-to-containers)**<br>
+**[Listing hosts and getting their connector version](#listing-hosts-and-getting-their-connector-version)**<br>
+**[Fetching pool details](#fetching-pool-details)**<br>
+
 
 ## JQ JSON Parser
 All examples use the JQ parser.
@@ -752,7 +763,7 @@ tmpfs                 4.9G  311M  4.6G   7% /dev/shm
 /dev/sdb               50G  1.6G   46G   4% /mnt/database
 /dev/sdc               50G   71M   47G   1% /mnt/logs
 ```
-## Mounting and unmounting Images - Example 5:  SQL App Aware mount
+## Example 5: SQL App Aware mount
 We may want to use App Aware mount to bring our MS SQL database online.
 To do this we take everything we learn in example 3 and add provisioning options to define the app aware mount.
 Here is an example for udsinfo
@@ -872,7 +883,7 @@ udsinfo lsappclass -name SQLServer
 ```
 curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsappclass?name=SQLServer&sessionid=$sessionid" | jq -c '.result [] | [.name]'
 ```
-## Mounting and unmounting Images - Example 6:  SQL App Aware mount of a Consistency Group
+## Example 6: SQL App Aware mount of a Consistency Group
 We may want to use App Aware mount of  MS SQL Consistency Group.
 This is a group of databases captured at a consistent point in time from a single source host.
 First we learn the Consistency Group ID.
@@ -935,7 +946,7 @@ curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?session
   "status": 0
 }
 ```
-## Mounting and unmounting Images - Example 7:  Oracle App Aware mount
+## Example 7: Oracle App Aware mount
 We may want to use App Aware mount to bring our Oracle database online.
 To do this we take everything we learn in example 4 and add provisioning options to define the Oracle app aware mount.
 Here is an example for udsinfo
@@ -1040,7 +1051,7 @@ udsinfo lsappclass
 ```
 udsinfo lsappclass Oracle
 ```
-## Mounting and unmounting Images - Example 8:  Oracle App Aware mount with recovery time
+## Example 8: Oracle App Aware mount with recovery time
 We may want to use App Aware mount to bring our Oracle database online and roll the logs forward to a particular point in time.
 When doing this we need to use the host points in time.   While this is clearly shown in the Actifio Desktop, in the CLI you need to ensure you work with the correct time range.
 In this example the user 'av' has a timezone of Melbourne Australia, while the source host is in the Boston USA timezone.
@@ -1081,7 +1092,7 @@ We should see an entry like this where the host time specified in the original c
 ```
 run { catalog start with '/act/mnt/Job_22362562_mountpoint_1449888060617/archivelog' noprompt; catalog start with '/act/mnt/Job_22362562_mountpoint_1449888103502/archivelog' noprompt; recover database until time "to_date('201512110410','yyyymmddhh24mi')"; }
 ```
-## Mounting and unmounting Images - Example 9:  Oracle App Aware mount with re-protection
+## Example 9: Oracle App Aware mount with reprotection
 We may want to use App Aware mount to bring our Oracle database online and roll the logs forward to a particular point in time.
 We also want to choose where it mounts.
 We also want to re-protect it.
@@ -1228,7 +1239,7 @@ In REST that is:
 ```
 curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/rmapplication" -d "argument=22375678" -d "sessionid=$sessionid"
 ```
-## Mounting and unmounting Images - Example 10:  Oracle App Aware mount to RAC
+## Example 10: Oracle App Aware mount to RAC
 We may want to use App Aware mount to bring our Oracle database online to a RAC cluster.
 We need to assemble several pieces of information to do this.
 First up the RAC members need to be defined to Actifio as hosts.   We need to know their IP addresses.
@@ -1268,7 +1279,7 @@ grid     14929     1  0 Oct17 ?        00:08:58 asm_pmon_+ASM2
 oracle   18849     1  0 23:12 ?        00:00:00 ora_pmon_jsontest2
 ```
 
-## Mounting system state images - Example 11
+## Example 11: Mounting system state images 
 
 This example will use GCP (Google Cloud Platform), but the methodology is the same for all cloud types.  
 There are two steps needed
@@ -1399,7 +1410,7 @@ The resulting command looks like this:
 udstask mountimage -image $imageid -systemprops "vmname=$gcpNewVMName, regionCode=$gcpRegion,zone=$gcpZone,nicInfo0-subnetId=$gcpSubnetID,isPublicIp=false,cloudtype=gcp,nicInfo0-networkId=$gcpNetworkID,volumetype=$gcpVolumeType,GCPkeys=$gcpkeyfile" -nowait
 ```
 
-## Mounting to Containers - Example 12
+## Example 12: Mounting to Containers 
 
 To mount to a Container, we just add **-container** to our mount command.  If we want to limit which hosts can access the mount, then we can specify this using the **-host** parm.   So in this example we present **Image_0022259** to IP addresses **10.1.1.1** and **10.2.2.2**.  If we want to add more IPs, just comma separate them:
 ```
@@ -1441,7 +1452,7 @@ curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "c
 
 
 
-## Hosts:   List them and get their connector version - example commands:
+## Listing hosts and getting their connector version
 Lets find what version connector is installed on our hosts:
 ```
 udsinfo lshost -filtervalue hasagent=true
@@ -1546,7 +1557,7 @@ curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lshost?sessionid=$sessionid&
 "6.2.0.63215"
 ```
 
-## Fetching pool details - example commands:
+## Fetching pool details
 To get pools we normally use this udsinfo command:   
 ```
 udsinfo lsdiskpool
