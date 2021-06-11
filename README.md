@@ -3,6 +3,18 @@
 
 To show some REST API examples.   Each example shows a udsinfo or udstask command and then shows the REST equivalent.   All examples are working examples, tested and confirmed.
 
+### Table of Contents
+**[JQ JSON Parser](#jq-json-parser)**<br>
+**[Using variables](#using-variables)**<br>
+**[Options to handle URLs](#options-to-handle-urls)**<br>
+**[Fetching Appliance version](fetching-appliance-version)**<br>
+**[Fetching Session ID](#fetching-session-id)**<br>
+**[Listing jobs](#listing-jobs)**<br>
+**[Example 1: Mount most recent snap](#example-1-mount-most-recent-snap)**<br>
+**[Example 2: Mount using Drive Letters](#example-2-mount-using-drive-letters)**<br>
+**[Example 3: Mount using mount points](#example-3-mount-using-mount-points)**<br>
+**[Example 4: Linux mount using mount points](#example-4-linux-mount-using-mount-points)**<br>
+
 ## JQ JSON Parser
 All examples use the JQ parser.
 The JQ JSON parser is portable and easy to use and can parse JSON very nicely.  
@@ -11,7 +23,7 @@ Because some commands use a number of characters that cannot normally be used in
 
 All examples in this article do NOT use URL encoding.
 
-## Variables when issuing info and task commands:
+## Using variables
 
 All examples will use variables with curl.   This means the IP address is always shown as **$vdpip**.   In a bash script the login parts could get assembled like this:
 ```
@@ -71,7 +83,7 @@ Option  Purpose
 * -G  : Send the -d data with a HTTP GET
 * -d  :  Used for additional data that we separate out due to encoding requirements
 
-## Can I use wget instead of curl?
+### Can I use wget instead of curl?
 The examples here all use curl, but you can use wget.  Here are some working examples:
 The options used are:
 * --no-check-certificate  : Because the certificate used is self-signed.
@@ -143,6 +155,7 @@ $ curl -s -k  https://172.24.1.180/actifio/api/version| jq -r '.result'
 6.1 (6.1.8.61044)
 ```
 ## Fetching Session ID
+
 To get a session ID we do this:
 ```
 curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"
@@ -215,7 +228,7 @@ else
 echo "Login for user $vdpuser to $vdpip failed"
 fi
 ```
-# Listing jobs - example commands:
+## Listing jobs
 The udsinfo command to list running jobs is:
 ```
 udsinfo lsjob
@@ -339,7 +352,7 @@ The easiest way to do this in restful API is like this:
 ```
 curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=appid=3434456&jobclass=snapshot&consistencydate>=2018-09-19" -d "sessionid=$sessionid" | jq
 ```
-## Mounting and unmounting Images - Example 1: Mount most recent snap
+## Example 1: Mount most recent snap
 Lets mount the most recent snapshot from application ID 20837997 to a host called demo-oracle-4
 ```
 udstask mountimage -appid 20837997 -host demo-oracle-4
@@ -446,7 +459,7 @@ udstask unmountimage -image Image_22188094 -delete
 curl -s -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_22189211&delete" | jq -r '.errormessage'
 image does not exist: Image_22189211
 ```
-## Mounting and unmounting Images - Example 2:  Mount using Drive Letters
+## Example 2: Mount using drive letters
 Lets find the most recent snapshot from application ID 20990406
 ```
 udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=20990406
@@ -628,7 +641,8 @@ curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?session
 }
 ```
 
-## Mounting and unmounting Images - Example 3:  Mount using Mount points
+## Example 3: Mount using mount points
+
 We might want to mount using mount points rather than drive letters.
 Taking the same image and host from Example 2, this is the udsinfo command.
 We take the L:\ and mount it to C:\Test\Data  and we take the S:\ and we mount it to C:\Test\Logs
@@ -683,7 +697,7 @@ curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsrestoreoptions?application
 ["mapdiskstoallclusternodes"]
 ["provisioningoptions"]
 ```
-## Mounting and unmounting Images - Example 4:  Linux mount using Mount points
+## Example 4: Linux mount using mount points
 Single mount point per image
 Lets say we have a Linux file system backup.
 We have identified a snapshot image of an application called /home and a target host to mount it to.
