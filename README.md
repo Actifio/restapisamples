@@ -1,7 +1,7 @@
 
 # Goal
 
-To show some REST API examples.   Each example shows a udsinfo or udstask command and then shows the REST equivalent.   All examples are working examples, tested and confirmed.
+To show some REST API examples for the Appliance API.   Each example shows a udsinfo or udstask command and then shows the REST equivalent.   All examples are working examples, tested and confirmed.
 
 ### Table of Contents
 **[JQ JSON Parser](#jq-json-parser)**<br>
