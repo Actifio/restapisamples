@@ -1412,6 +1412,8 @@ udstask mountimage -image $imageid -systemprops "vmname=$gcpNewVMName, regionCod
 
 ## Example 12: Mounting to Containers 
 
+NOTE.   TO display Container YAML, you need to use AGM API.  See the example here:  https://github.com/Actifio/restapisamples/blob/main/AGMAPI.md#fetching-container-mount-yaml
+
 To mount to a Container, we just add **-container** to our mount command.  If we want to limit which hosts can access the mount, then we can specify this using the **-host** parm.   So in this example we present **Image_0022259** to IP addresses **10.1.1.1** and **10.2.2.2**.  If we want to add more IPs, just comma separate them:
 ```
 udstask mountimage -image Image_0022259 -host "10.1.1.1,10.2.2.2" -container -nowait
