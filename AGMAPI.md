@@ -57,14 +57,14 @@ $ echo $agmsessionid
 
 ## Managing Mounts
 
-### Fetching details about moujnts
+### Fetching details about mounts
 
 If we want to get the details of our mounts we can use a command like this:
 ```
 curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/backup?filter=jobclass:==mount" | jq -cr '.items[] | [.id, .backupname,  .appname]'
 ```
 
-This tells us the backup ID being used by AGM.  Note that this is a different ID than the VDP appliance was using, but the backup name is the same:
+This tells us the backup ID being used by AGM.  Note that this is a different ID than the VDP appliance will be using, but the backup name will be the same:
 ```
 $ curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/backup?filter=jobclass:==mount" | jq -cr '.items[] | [.id, .backupname,  .appname]'
 ["85082","Image_0110695","mysqld_3306"]
@@ -72,7 +72,7 @@ $ curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio
 
 ### Fetching Container mount YAML
 
-We need to run this command against the backup ID.  In this example 85082
+We need to run this command against the backup ID.  In this example it is 85082 (yours will be different):
 ```
 curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/backup/85082
 ```
