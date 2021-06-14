@@ -5,7 +5,9 @@ To show some REST API examples for the AGM API.   All examples are working examp
 ### Table of Contents
 **[JQ JSON Parser](#jq-json-parser)**<br>
 **[Using variables](#using-variables)**<br>
-**[Fetching a Session ID](#fetching-a-session-id)**<br>
+**[Creating a Session ID](#creating-a-session-id)**<br>
+**[Fetching AGM Version](#fetching-agm-version)**<br>
+**[Fetching Session Details](#fetching-session-details)**<br>
 **[Managing Mounts](#managing-mounts)**<br>
 
 ## JQ JSON Parser
@@ -20,7 +22,7 @@ All examples in this article do NOT use URL encoding.
 
 All examples will use variables with curl.   This means the IP address is always shown as **$agmip**.   
 ```
-agmip=10.186.0.2
+agmip=10.186.0.5
 agmuser=admin
 agmpass=password
 
@@ -37,7 +39,7 @@ Option  Purpose
 
 
 
-## Fetching a Session ID
+## Creating a Session ID
 
 We create a session ID with this command:
 
@@ -53,6 +55,91 @@ In this exammple we login and validate the session ID is set:
 $ agmsessionid=$(curl -w "\n" -sS -k -XPOST --user $agmuser:$agmpass --tlsv1.2 -k https://$agmip/actifio/session | jq -r '.id')
 $ echo $agmsessionid
 61eaf9e3-eca3-487b-a62a-9d7d2931a84d
+```
+
+### Using base64 encoding to avoid storing passwords in the clear
+
+We can use base 64 encoding to create an encoded sets of credentials.   The syntax looks like this:
+```
+echo -n 'admin:password' | base64               
+```
+Here is an example:
+```
+$ echo -n 'admin:password' | base64
+YWRtaW46cGFzc3dvcmQ=
+```
+Note you can reverse the encoding just as easily, which means this method does not make the encoded authorization details truly secret:
+```
+echo -n 'YWRtaW46cGFzc3dvcmQ=' | base64 -d      
+```
+Here is an example:
+```
+$ echo -n 'YWRtaW46cGFzc3dvcmQ=' | base64 -d
+admin:passwordavw-macbookpro:~ avw$
+```
+We can use commands like this to send the encoded package:
+```
+encodedcredentials=$(echo -n 'admin:password' | base64)
+agmsessionid=$(curl -w "\n" -sS -k -XPOST -k https://$agmip/actifio/session -H "Authorization: Basic $encodedcredentials" | jq -r '.id')
+```
+### Removing the session
+
+Once you have finished running commands, it is better to remove the session, rather than leave it to time out.   You use this command:
+```
+curl -s -k -XDELETE https://$agmip/actifio/session/$agmsessionid
+```
+Here is an example where we login, confirm we can issue a command, logout and confirm the session ID is gone:
+```
+$ agmsessionid=$(curl -w "\n" -sS -k -XPOST --user $agmuser:$agmpass --tlsv1.2 -k https://$agmip/actifio/session | jq -r '.id')
+$ echo $agmsessionid
+2d8b8db9-3734-4b03-b94f-b71ba63fd9bd
+$ curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/config/versiondetail
+{
+   "product" : "AGM",
+   "components" : [ {
+      "component" : "AGM",
+      "summary" : "10.0.2.5357",
+      "installed" : 1622614922581
+   } ],
+   "summary" : "10.0.2.5357",
+   "installed" : 1622614922581
+}
+$ curl -s -k -XDELETE https://$agmip/actifio/session/$agmsessionid
+$ curl -sS -X GET -k https://$agmip/actifio/session/$agmsessionid
+{
+   "err_code" : 10040,
+   "err_message" : "session id is not found"
+}
+$
+```
+
+## Fetching AGM Version
+
+This is the command to get the AGM Version.  It is a useful command to confirm AGM is responding correctly:
+```
+curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/config/versiondetail
+```
+Here is an example:
+
+```
+$ curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/config/versiondetail
+{
+   "product" : "AGM",
+   "components" : [ {
+      "component" : "AGM",
+      "summary" : "10.0.2.5357",
+      "installed" : 1622614922581
+   } ],
+   "summary" : "10.0.2.5357",
+   "installed" : 1622614922581
+```
+## Fetching Session Details
+
+When you login to create a session, you get the Session ID details.    You can fetch these again using any of these commands:
+```
+curl -sS -X GET -k https://$agmip/actifio/session/$agmsessionid
+curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/session/current
+curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/session/$agmsessionid
 ```
 
 ## Managing Mounts
