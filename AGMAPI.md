@@ -50,7 +50,7 @@ This returns all the information for the session, but the thing we really want i
 ```
 agmsessionid=$(curl -w "\n" -sS -k -XPOST --user $agmuser:$agmpass --tlsv1.2 -k https://$agmip/actifio/session | jq -r '.id')
 ```
-In this exammple we login and validate the session ID is set:
+In this example we login and validate the session ID is set:
 ```
 $ agmsessionid=$(curl -w "\n" -sS -k -XPOST --user $agmuser:$agmpass --tlsv1.2 -k https://$agmip/actifio/session | jq -r '.id')
 $ echo $agmsessionid
