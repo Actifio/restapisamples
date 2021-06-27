@@ -1487,6 +1487,12 @@ To find GCP Instance snapshots:
 ```
 udsinfo lsbackup -filtervalue apptype=GCPInstance
 ```
+This is an API version of the same command
+```
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=apptype=GCPInstance" -d "sessionid=$sessionid"
+```
+
+
 To mount a cloud snapshot as a new GCE Instance we need to know the image ID and we need to know the cloudcredential and project.   We then need to supply cloud specific information.
 
 This is the most minimal command that will work (in order):
@@ -1504,7 +1510,10 @@ This is the most minimal command that will work (in order):
 ```
 udstask mountimage -image 18457 -systemprops '{"serviceaccount":"pdsnaps@project2.iam.gserviceaccount.com","flat-structure":true,"networksettings":[{"subnet":"https://www.googleapis.com/compute/v1/projects/project2/regions/australia-southeast1/subnetworks/default","vpc":"https://www.googleapis.com/compute/v1/projects/project2/global/networks/default"}],"cloudcredential":"4447","project":"project2","bootdisk":50,"machinetype":"e2-medium","instancename":"avrecovery","formtype":"newmount","zone":"australia-southeast1-b","poweronvm":"yes"}'
 ```
-
+This is a API example of the same command:
+```
+curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=18457&sessionid=$sessionid" --data-urlencode 'systemprops={"serviceaccount":"pdsnaps@project2.iam.gserviceaccount.com","flat-structure":true,"networksettings":[{"subnet":"https://www.googleapis.com/compute/v1/projects/project2/regions/australia-southeast1/subnetworks/default","vpc":"https://www.googleapis.com/compute/v1/projects/project2/global/networks/default"}],"cloudcredential":"4447","project":"project2","bootdisk":50,"machinetype":"e2-medium","instancename":"avrecovery","formtype":"newmount","zone":"australia-southeast1-b","poweronvm":"yes"}'
+```
 
 In this example we add three more things (on top of the earlier command):
 
@@ -1514,15 +1523,31 @@ In this example we add three more things (on top of the earlier command):
 ```
 udstask mountimage -image 18457 -systemprops '{"serviceaccount":"pdsnaps@project2.iam.gserviceaccount.com","flat-structure":true,"networksettings":[{"subnet":"https://www.googleapis.com/compute/v1/projects/project2/regions/australia-southeast1/subnetworks/default","vpc":"https://www.googleapis.com/compute/v1/projects/project2/global/networks/default","externalip":"true"}],"cloudcredential":"4447","project":"avwlab2","bootdisk":50,"machinetype":"e2-medium","instancename":"avrecovery2","networktag":["http-server","https-server"],"formtype":"newmount","zone":"australia-southeast1-b","poweronvm":"yes","tag":[{"value":"cloudsnap","selected":true,"key":"project"}]}'
 ```
+We can find our mounted GCE Instance with this command:
+```
+udsinfo lsbackup -filtervalue "apptype=GCPInstance&jobclass=mount"
+```
+Which is:
+```
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=apptype=GCPInstance&jobclass=mount" -d "sessionid=$sessionid"
+```
 Having created the GCE Instances, we have two choices:
 
-1. Unmount and delete. This command deletes the mounted image record on the Actifio GO side and the GCE Instance on the GCP side.
+1.Unmount and delete. This command deletes the mounted image record on the Actifio GO side and the GCE Instance on the GCP side.
 ```
 udstask unmountimage -delete -nowait -image Image_0019903
 ```
-1. Forget the image. This command deletes the mounted image record on Actifio GO side but leaves the GCE Instance on the GCP side.
+This is a REST API example of the same command:
 ```
-udstask unmountimage -preservevm -nowait -image Image_0019924 -delete
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_0020813&delete"
+```
+1.Forget the image. This command deletes the mounted image record on Actifio GO side but leaves the GCE Instance on the GCP side.
+```
+udstask unmountimage -preservevm -nowait -image Image_0020813 -delete
+```
+This is a REST API example of the same command:
+```
+curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_0020813&delete&preservevm"
 ```
 
 
