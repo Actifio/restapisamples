@@ -22,6 +22,7 @@ To show some REST API examples for the Appliance API.   Each example shows a uds
 **[Example 10: Oracle App Aware mount to RAC](#example-10-oracle-app-aware-mount-to-rac)**<br>
 **[Example 11: Mounting system state images](#example-11-mounting-system-state-images)**<br>
 **[Example 12: Mounting to Containers ](#example-12-mounting-to-containers)**<br>
+**[Example 13: Mounting PD Snaps as new GCE Instances](#example-13-mounting-pd-snaps-as-new-gce-instances)**<br>
 **[Listing hosts and getting their connector version](#listing-hosts-and-getting-their-connector-version)**<br>
 **[Fetching pool details](#fetching-pool-details)**<br>
 
@@ -1461,6 +1462,67 @@ udstask mountimage -image Image_0111783 -container -restoreoption "mountpointper
 Which gives us this command where the blue are the source volumes and the red are the target paths.
 ```
 curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "container=true&image=Image_0111783&sessionid=$sessionid" --data-urlencode "restoreoption=mountpointperdisk-dasvol:trntrsau/ifmxvar=/ifmx/var,mountpointperdisk-dasvol:trntrsau/ifmxetc=/ifmx/etc"
+```
+
+## Example 13: Mounting PD Snaps as new GCE Instances
+
+There are several commands to be aware of here:
+
+To learn existing cloud credentials:
+```
+udsinfo lscloudcredential
+```
+These two commands effectively test a cloud credential by looking for GCE Instances using the stated credentials:
+```
+udsinfo lscloudvm -cloudcredential 4447
+udsinfo testcredential -cloudcredential 4447
+```
+These three commands manage the credentials:
+```
+udstask chcloudcredential
+udstask mkcloudcredential
+udstask rmcloudcredential
+```
+To find GCP Instance snapshots:
+```
+udsinfo lsbackup -filtervalue apptype=GCPInstance
+```
+To mount a cloud snapshot as a new GCE Instance we need to know the image ID and we need to know the cloudcredential and project.   We then need to supply cloud specific information.
+
+This is the most minimal command that will work (in order):
+* We supply the service account to use
+* We supply the subnet, using a URL.  You cannot just use the name.
+* We supply the VPC (the network)using a URL.   you cannot just use the name.
+* We supply the cloud credential ID from udsinfo lscloudcredential
+* We supply the project name
+* We supply the desired size of the boot disk.
+* We supply the desired machine type
+* We supply the desired instancename
+* We supply the desired zone
+* We supply if we want the new VM to be powered on
+
+```
+udstask mountimage -image 18457 -systemprops '{"serviceaccount":"pdsnaps@project2.iam.gserviceaccount.com","flat-structure":true,"networksettings":[{"subnet":"https://www.googleapis.com/compute/v1/projects/project2/regions/australia-southeast1/subnetworks/default","vpc":"https://www.googleapis.com/compute/v1/projects/project2/global/networks/default"}],"cloudcredential":"4447","project":"project2","bootdisk":50,"machinetype":"e2-medium","instancename":"avrecovery","formtype":"newmount","zone":"australia-southeast1-b","poweronvm":"yes"}'
+```
+
+
+In this example we add three more things (on top of the earlier command):
+
+* We request an external IP with ‘true’, but we could specify one.
+* We supply two networking tags
+* We supply a tag
+```
+udstask mountimage -image 18457 -systemprops '{"serviceaccount":"pdsnaps@project2.iam.gserviceaccount.com","flat-structure":true,"networksettings":[{"subnet":"https://www.googleapis.com/compute/v1/projects/project2/regions/australia-southeast1/subnetworks/default","vpc":"https://www.googleapis.com/compute/v1/projects/project2/global/networks/default","externalip":"true"}],"cloudcredential":"4447","project":"avwlab2","bootdisk":50,"machinetype":"e2-medium","instancename":"avrecovery2","networktag":["http-server","https-server"],"formtype":"newmount","zone":"australia-southeast1-b","poweronvm":"yes","tag":[{"value":"cloudsnap","selected":true,"key":"project"}]}'
+```
+Having created the GCE Instances, we have two choices:
+
+1. Unmount and delete. This command deletes the mounted image record on the Actifio GO side and the GCE Instance on the GCP side.
+```
+udstask unmountimage -delete -nowait -image Image_0019903
+```
+1. Forget the image. This command deletes the mounted image record on Actifio GO side but leaves the GCE Instance on the GCP side.
+```
+udstask unmountimage -preservevm -nowait -image Image_0019924 -delete
 ```
 
 
