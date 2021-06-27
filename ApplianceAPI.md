@@ -1533,7 +1533,7 @@ curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlenco
 ```
 Having created the GCE Instances, we have two choices:
 
-1.Unmount and delete. This command deletes the mounted image record on the Actifio GO side and the GCE Instance on the GCP side.
+1. Unmount and delete. This command deletes the mounted image record on the Actifio GO side and the GCE Instance on the GCP side.
 ```
 udstask unmountimage -delete -nowait -image Image_0019903
 ```
@@ -1541,7 +1541,7 @@ This is a REST API example of the same command:
 ```
 curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_0020813&delete"
 ```
-1.Forget the image. This command deletes the mounted image record on Actifio GO side but leaves the GCE Instance on the GCP side.
+2. Forget the image. This command deletes the mounted image record on Actifio GO side but leaves the GCE Instance on the GCP side.
 ```
 udstask unmountimage -preservevm -nowait -image Image_0020813 -delete
 ```
