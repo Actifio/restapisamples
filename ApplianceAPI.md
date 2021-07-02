@@ -1496,9 +1496,8 @@ curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlenco
 To mount a cloud snapshot as a new GCE Instance we need to know the image ID and we need to know the cloudcredential and project.   We then need to supply cloud specific information.
 
 This is the most minimal command that will work (in order):
-* We supply the service account to use
-* We supply the subnet, using a URL.  You cannot just use the name.
-* We supply the VPC (the network)using a URL.   you cannot just use the name.
+
+
 * We supply the cloud credential ID from udsinfo lscloudcredential
 * We supply the project name
 * We supply the desired size of the boot disk.
@@ -1506,24 +1505,59 @@ This is the most minimal command that will work (in order):
 * We supply the desired instancename
 * We supply the desired zone
 * We supply if we want the new VM to be powered on
+* We supply the subnet for nic0, using a URL.  You cannot just use the name.
+* We supply the VPC for nic0 (the network)using a URL.   you cannot just use the name.
+* If we want nic1 we can add it separately
 
+We need the cloud credential ID.   
+In release 10.0.2 we need a credential in the same project
+In release 10.0.4 we can use any credential that can act as a service account in the relevant project
+Note these examples are using PowerShell commands:
 ```
-udstask mountimage -image 18457 -systemprops '{"serviceaccount":"pdsnaps@project2.iam.gserviceaccount.com","flat-structure":true,"networksettings":[{"subnet":"https://www.googleapis.com/compute/v1/projects/project2/regions/australia-southeast1/subnetworks/default","vpc":"https://www.googleapis.com/compute/v1/projects/project2/global/networks/default"}],"cloudcredential":"4447","project":"project2","bootdisk":50,"machinetype":"e2-medium","instancename":"avrecovery","formtype":"newmount","zone":"australia-southeast1-b","poweronvm":"yes"}'
-```
-This is a API example of the same command:
-```
-curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=18457&sessionid=$sessionid" --data-urlencode 'systemprops={"serviceaccount":"pdsnaps@project2.iam.gserviceaccount.com","flat-structure":true,"networksettings":[{"subnet":"https://www.googleapis.com/compute/v1/projects/project2/regions/australia-southeast1/subnetworks/default","vpc":"https://www.googleapis.com/compute/v1/projects/project2/global/networks/default"}],"cloudcredential":"4447","project":"project2","bootdisk":50,"machinetype":"e2-medium","instancename":"avrecovery","formtype":"newmount","zone":"australia-southeast1-b","poweronvm":"yes"}'
+PS /home/avw_google_com> udsinfo lscloudcredential | select name,id,projectid
+
+name    id    projectid
+----    --    ---------
+avwlab2 28417 avwlab2
 ```
 
-In this example we add three more things (on top of the earlier command):
+Now we learn the app ID of the app we want to work with:
+```
+PS /home/avw_google_com> udsinfo lsapplication -filtervalue apptype=GCPInstance | select id,appname
 
-* We request an external IP with ‘true’, but we could specify one.
-* We supply two networking tags
-* We supply a tag
+id    appname
+--    -------
+28434 tiny
 ```
-udstask mountimage -image 18457 -systemprops '{"serviceaccount":"pdsnaps@project2.iam.gserviceaccount.com","flat-structure":true,"networksettings":[{"subnet":"https://www.googleapis.com/compute/v1/projects/project2/regions/australia-southeast1/subnetworks/default","vpc":"https://www.googleapis.com/compute/v1/projects/project2/global/networks/default","externalip":"true"}],"cloudcredential":"4447","project":"avwlab2","bootdisk":50,"machinetype":"e2-medium","instancename":"avrecovery2","networktag":["http-server","https-server"],"formtype":"newmount","zone":"australia-southeast1-b","poweronvm":"yes","tag":[{"value":"cloudsnap","selected":true,"key":"project"}]}'
+
+now lets set ourselves up:
 ```
-We can find our mounted GCE Instance with this command:
+$imageid = Get-LastSnap -app 28434 |select id
+$gcpcredentialid = 28417
+$gcpProject = "avwlab3"
+$gcpNewVMname = "tinytim"
+$gcpZone = "australia-southeast1-c"
+$gcpNetworkinfo = "subnet=https://www.googleapis.com/compute/v1/projects/avwlab3/regions/australia-southeast1/subnetworks/default:vpc=https://www.googleapis.com/compute/v1/projects/avwlab3/global/networks/default"
+```
+This gives us:
+```
+udstask mountimage -image $imageid.id -systemprops "cloudcredential=$gcpcredentialid,project=$gcpProject,machinetype=e2-medium,instancename=$gcpNewVMname,zone=$gcpZone,nic0=[$gcpNetworkinfo],bootdisk=10" -poweronvm
+```
+
+There are four things we can do on top of this:
+
+1)  Add networktags as network tag like:   networktag=[http-server:https-server]
+2)  Add Labels to the VM like this:  tags=[dog|cat:pig|cow]
+3)  Add an external IP and a defined internal IP like this:
+```
+$gcpNetworkinfo = "subnet=https://www.googleapis.com/compute/v1/projects/avwlab3-318401/regions/australia-southeast1/subnetworks/default:vpc=https://www.googleapis.com/compute/v1/projects/avwlab3-318401/global/networks/default:privateips=10.152.0.200:externalip=true"
+```
+Which gives us this:
+```
+udstask mountimage -image $imageid.id -systemprops "cloudcredential=$gcpcredentialid,project=$gcpProject,machinetype=e2-medium,instancename=$gcpNewVMname,zone=$gcpZone,nic0=[$gcpNetworkinfo],networktag=[http-server:https-server],tags=[dog|cat:pig|cow],bootdisk=10" -poweronvm
+```
+
+We can find our mounted GCE Instances with this command:
 ```
 udsinfo lsbackup -filtervalue "apptype=GCPInstance&jobclass=mount"
 ```
