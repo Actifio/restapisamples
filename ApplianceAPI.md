@@ -1529,19 +1529,9 @@ id    appname
 --    -------
 28434 tiny
 ```
-
-now lets set ourselves up:
+We have a number of variables we need to supply, which gives us:
 ```
-$imageid = Get-LastSnap -app 28434 |select id
-$gcpcredentialid = 28417
-$gcpProject = "avwlab3"
-$gcpNewVMname = "tinytim"
-$gcpZone = "australia-southeast1-c"
-$gcpNetworkinfo = "subnet=https://www.googleapis.com/compute/v1/projects/avwlab3/regions/australia-southeast1/subnetworks/default:vpc=https://www.googleapis.com/compute/v1/projects/avwlab3/global/networks/default"
-```
-This gives us:
-```
-udstask mountimage -image $imageid.id -systemprops "cloudcredential=$gcpcredentialid,project=$gcpProject,machinetype=e2-medium,instancename=$gcpNewVMname,zone=$gcpZone,nic0=[$gcpNetworkinfo],bootdisk=10" -poweronvm
+udstask mountimage -image $imageid.id -systemprops '{"cloudcredential":4441,"project":"lab1","machinetype":"e2-medium","instancename":"windows4","zone":"australia-southeast1-c","bootdisk":60,"nic0":["subnet=https://www.googleapis.com/compute/v1/projects/lab1/regions/australia-southeast1/subnetworks/default:vpc=https://www.googleapis.com/compute/v1/projects/lab1/global/networks/default"]}' -poweronvm
 ```
 
 There are four things we can do on top of this:
@@ -1550,11 +1540,7 @@ There are four things we can do on top of this:
 2)  Add Labels to the VM like this:  tags=[dog|cat:pig|cow]
 3)  Add an external IP and a defined internal IP like this:
 ```
-$gcpNetworkinfo = "subnet=https://www.googleapis.com/compute/v1/projects/avwlab3-318401/regions/australia-southeast1/subnetworks/default:vpc=https://www.googleapis.com/compute/v1/projects/avwlab3-318401/global/networks/default:privateips=10.152.0.200:externalip=true"
-```
-Which gives us this:
-```
-udstask mountimage -image $imageid.id -systemprops "cloudcredential=$gcpcredentialid,project=$gcpProject,machinetype=e2-medium,instancename=$gcpNewVMname,zone=$gcpZone,nic0=[$gcpNetworkinfo],networktag=[http-server:https-server],tags=[dog|cat:pig|cow],bootdisk=10" -poweronvm
+"subnet=https://www.googleapis.com/compute/v1/projects/lab1/regions/australia-southeast1/subnetworks/default:vpc=https://www.googleapis.com/compute/v1/projects/lab1/global/networks/default:privateips=10.152.0.200:externalip=true"
 ```
 
 We can find our mounted GCE Instances with this command:
