@@ -25,7 +25,7 @@ To show some REST API examples for the Appliance API.   Each example shows a uds
 **[Example 13: Mounting PD Snaps as new GCE Instances](#example-13-mounting-pd-snaps-as-new-gce-instances)**<br>
 **[Listing hosts and getting their connector version](#listing-hosts-and-getting-their-connector-version)**<br>
 **[Fetching pool details](#fetching-pool-details)**<br>
-
+**[Importing OnVault images](#importing-onvault-images)**<br>
 
 ## JQ JSON Parser
 All examples use the JQ parser.
@@ -1819,3 +1819,51 @@ act_pri_pool000,71
 act_ded_pool000,72
 act_per_pool000,73
 ```
+
+## Importing OnVault images
+
+To import OnVault images we need to know two things, the diskpool name and the cluster name.  The cluster may be totally foreign to the Appliance you are importing into.   First learn the disk pool from this command:
+```
+udsinfo lsdiskpool 
+```
+Which is:
+```
+curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid
+```
+We then take the pool name of the relevant Vault pool and run this command to learn the clusterid and appid of the images in the bucket:
+```
+udsinfo lsvaultbackup -vaultpool europegcveimages
+```
+Which is:
+```
+curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsvaultbackup?sessionid=$sessionid&vaultpool=europegcveimages"
+```
+The output will look like this:
+```
+clustername                  clusterid    hostname            appname             appid  imagecount applicationsize logimagecount
+londonsky.c.avwlab2.internal 145759989824 centos2             Centos2             14956  7          800506788       0
+londonsky.c.avwlab2.internal 145759989824 centos1             Centos1             55080  8          814957518       0
+londonsky.c.avwlab2.internal 145759989824 winsrv2019-2        WinSrv2019-2        14962  8          12104893414     0
+```
+Now we can import the images.   If you don't specify an appid with -app then we get all images for that cluster:
+```
+udstask importvaultbackup -vaultpool europegcveimages -cluster 145759989824 -app 55080
+```
+Which is:
+```
+curl -s -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/importvaultbackup?sessionid=$sessionid&vaultpool=europegcveimages&cluster=145759989824&app=55080"
+```
+Output will look like this:
+```
+backupname
+londonsky.c.avwlab2.internal_Image_0086515
+londonsky.c.avwlab2.internal_Image_0086407
+londonsky.c.avwlab2.internal_Image_0073729
+londonsky.c.avwlab2.internal_Image_0070657c
+londonsky.c.avwlab2.internal_Image_0072798
+londonsky.c.avwlab2.internal_Image_0067585
+londonsky.c.avwlab2.internal_Image_0066561
+londonsky.c.avwlab2.internal_Image_0062748
+```
+
+
