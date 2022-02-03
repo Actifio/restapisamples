@@ -49,6 +49,9 @@ vdpuser=$(whoami)
 read -s -p "Password for user $vdpuser on $vdpip: " vdppass
 vdpkey=727b5563-adf6-4450-9b60-24276194ddb5
 ```
+## Passwords with special characters need to be URL encoded
+If your password has a special character like a # you will need to URL encode the password.
+So instead of p#ssw0rd use p%23ssw0rd
 
 ## Options to handle URLs
 If you do not quote your commands when used in a shell, you will need to use backslashes to prevent the '&' symbol being misinterpreted.
