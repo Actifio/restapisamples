@@ -22,9 +22,9 @@ All examples in this article do NOT use URL encoding.
 
 All examples will use variables with curl.   This means the IP address is always shown as **$agmip**.   
 ```
-agmip=10.186.0.5
-agmuser=admin
-agmpass=password
+agmip=10.10.0.3
+agmuser=apiuser   
+agmpass=Secret1
 
 ```
 ### What Curl options are used in these examples?
@@ -192,3 +192,64 @@ $ curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio
 $
 ```
 
+## Creating an on-demand backup
+
+If we want to create an on-demand backup, we need to learn:
+
+* The Application ID for the application the job will run against
+* The policy ID for the backup in question
+
+### Learning the application ID
+
+We can query the application end point like this, but this will return a lot of data
+```
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/application"
+```
+We can make the output easier to read by doing this to display only applications that managed (creating backups):
+```
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/application?filter=managed:==true" | jq -cr '.items[] | [.id,  .appname, .apptype]'
+```
+Here is an example output:
+```
+["8766","bastion","GCPInstance"]
+```
+We now have the application ID for our application (in this example 8766).
+
+### Learning the policy ID
+
+This is done in two parts.   First we need to learn the template (SLT) ID.  So use your application ID like this:
+```
+appid=8766
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/sla?filter=appid:==$appid" | jq -cr '.items[] | [.slt]'
+```
+Example output:
+```
+[{"id":"6717","href":"https://10.10.0.3/actifio/slt/6717","name":"snap","override":"true","sourcename":"snap"}]
+```
+Now we have the SLT ID, which in this example is 6717.
+
+Now we learn the policy IDs in that template.
+```
+sltid=6717
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/slt/$sltid/policy" | jq -cr '.items[] | [.id, .name, .op]'
+```
+Here is an example of the output, where the ID of our policy in this example is 6718.
+```
+["6718","snap","snap"]
+```
+### Run the on demand backup
+
+Now we have the appid and policy ID we can run the backup job.
+
+```
+appid=8766
+policyid=6718
+curl -w "\n" -sS -k -XPOST -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid"  "https://$agmip/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid}}"
+```
+If this is a database application you need to also specify a backuptype of **log** or **DB** so the JSON data block would look like this:
+```
+appid=8766
+policyid=6718
+backuptype="log"
+curl -w "\n" -sS -k -XPOST -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid"  "https://$agmip/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid},\"backuptype\":\"$backuptype\"}"
+```
