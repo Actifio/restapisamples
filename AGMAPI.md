@@ -9,6 +9,7 @@ To show some REST API examples for the AGM API.   All examples are working examp
 **[Fetching AGM Version](#fetching-agm-version)**<br>
 **[Fetching Session Details](#fetching-session-details)**<br>
 **[Managing Mounts](#managing-mounts)**<br>
+**[Creating an on demand backup](#creating-an-on-demand-backup)**<br>
 
 ## JQ JSON Parser
 All examples use the JQ parser.
@@ -192,7 +193,7 @@ $ curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio
 $
 ```
 
-## Creating an on-demand backup
+## Creating an on demand backup
 
 If we want to create an on-demand backup, we need to learn:
 
