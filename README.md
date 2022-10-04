@@ -1,13 +1,47 @@
 # restapisamples
 This repository contain Rest API integration samples for Actifio APIs
 
+
+
 ## AGM API 
+
+Note that this section only applies to Actifio AGM
+
+| Product | Device | Can connect to:
+| ---- | ---- | --------
+| Actifio | AGM  | yes         
+| Actifio | Sky | no        
+| Google Cloud Backup and DR | Management Console |  no
+| Google Cloud Backup and DR | Backup/recovery appliance |  no
 
 https://github.com/Actifio/restapisamples/blob/main/AGMAPI.md
 
 ## Appliance API  
 
+Note that this section only applies to Actifio Sky
+
+| Product | Device | Can connect to:
+| ---- | ---- | --------
+| Actifio | AGM  | no         
+| Actifio | Sky | yes        
+| Google Cloud Backup and DR | Management Console |  no
+| Google Cloud Backup and DR | Backup/recovery appliance |  no
+
 https://github.com/Actifio/restapisamples/blob/main/ApplianceAPI.md
+
+## Backup and DR Management Console API  
+
+Note that this section only applies to Google Cloud Backup and DR Management Console API:
+
+| Product | Device | Can connect to:
+| ---- | ---- | --------
+| Actifio | AGM  | no         
+| Actifio | Sky | yes        
+| Google Cloud Backup and DR | Management Console |  yes
+| Google Cloud Backup and DR | Backup/recovery appliance |  no
+
+https://github.com/Actifio/restapisamples/blob/main/Backup%20and%20DR.md
+
 
 ## Contributing
 
