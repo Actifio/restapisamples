@@ -1,4 +1,4 @@
-# Goal
+# Actifio Global Manager API examples
 
 To show some REST API examples for the AGM API.   All examples are working examples, tested and confirmed.
 
