@@ -5,7 +5,7 @@ With the announcement of Google Cloud Backup and DR there are three possible sta
 
 | Product | Device | API
 | ---- | ---- | --------
-| Actifio | AGM  | [API Page](https://github.com/Actifio/restapisamples/blob/main/AGMAPI.md)  
+| Actifio | AGM  | [Actifio Global Manager API examples](https://github.com/Actifio/restapisamples/blob/main/AGMAPI.md)  
 | Actifio | Sky | [API Page](https://github.com/Actifio/restapisamples/blob/main/ApplianceAPI.md)
 | Google Cloud Backup and DR | Management Console |  [API Page](https://github.com/Actifio/restapisamples/blob/main/Backup%20and%20DR.md)
 | Google Cloud Backup and DR | Backup/recovery appliance |  none
