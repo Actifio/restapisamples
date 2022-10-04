@@ -49,13 +49,13 @@ Note that you may over time find the two Service account roles get excess permis
 Decide where/how you will run your service account. You have two options:
 1. GCE Instance running as the service account
 
-In option 1 we are going to use a GCE instance to run our API commands/automation and because a GCE Instance can 'run' as a Service Account, we can avoid the need to install a service key on that host.   The host needs the gcloud CLI installed (which is automatic if you use a Google image to create the instance).  
+In option 1 we are going to use a GCE instance to run our API commands/automation and because a GCE Instance can 'run' as a Service Account, we can avoid the need to install a service key on that host. The host needs the gcloud CLI installed (which is automatic if you use a Google image to create the instance).  
 
-In your project create or select an instance that you want to use for API operations.   Ensure the instance is 'running' as the Service account that has the permissions detailed above..  You can use an existing instance or create a new one.   If you need to change/set the Service Account, the instance needs to be powered off.
+In your project create or select an instance that you want to use for API operations. Ensure the instance is 'running' as the Service account that has the permissions detailed above. You can use an existing instance or create a new one. If you need to change/set the Service Account, the instance needs to be powered off.
 
 2.   Activate your service account on a host
 
-In option 2,  we are going to use a GCE instance or external host/VM to run our API commands/automation, but we are going to 'activate' the Service account using a JSON Key.   The host needs the **gcloud** CLI installed.
+In option 2, we are going to use a GCE instance or external host/VM to run our API commands/automation, but we are going to *activate* the Service account using a JSON Key.   The host needs the **gcloud** CLI installed.
 
 We need to activate our service account since we are not executing this command from a GCE instance already running as that SA.
 So firstly we need to download a JSON key from the Google console and copy that key to our relevant host:
@@ -111,23 +111,16 @@ $ curl -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-
   ]
 }
 ```
-### Simplified User Add solution
+### Add the user before they login
 To ensure the user has the correct role the first time it logs in, manually adding the user to the Management Console BEFORE the first login is recommended.    After you create the user in Google IAM,  login to your Management Console,  go to  Manage → Users and select Create User
 
 Now enter the Service account email as the Username and select the relevant roles.   
 
 You can now proceed to login having 'pre-added' user and assigned it a Management Console role.
 
-
 ## Login process - API
 
-### First time login:
-
-1. Create a Token - has to be be done every time you login
-1. Create a Session ID using the token - has to be be done every time you login
-1. Set a role - Has to be done ONLY the first time you login to place your user into a Management Console Role if you did not pre-add the user.
-
-### Second time login:
+### Login steps
 
 1. Create a Token - has to be be done every time you login
 1. Create a Session ID using the token - has to be be done every time you login
@@ -182,13 +175,14 @@ There are three considerations when converting from Actifio GO:
 
 1. Is the automation using AGM API commands or Sky API commands or Sky SSH
 1. Configuration of the host where the automation is running 
-1. The user ID being used by the automation for authentication
+1. The user ID being used by the automation for authentication will need to change.
 
 Let's look at each point:
 
 ### AGM API vs Sky API
 
 Backup and DR only supports AGM API commands, sent to the Management Console.   If your automation is targeting a Sky Appliance using udsinfo and udstask commands sent either via ActPowerCLI (PowerShell), REST API command or an SSH session, then it cannot be used with Backup and DR and will need to be re-written.   If your automation is already using AGM API commands (or AGMPowerCLI), then very few changes will be needed.
+
 ### Automation Host Configuration
 
 The automation host for Backup and DR API calls will need the gcloud CLI installed. Once installed the gcloud CLI will need access to a Google Cloud Service Account (with the correct roles), either through being executed on a GCE Instance running as that SA, or by using an activated JSON key for that service account.   The setup tasks for this typically only need to be done once, and are detailed in the sections above.
@@ -198,13 +192,11 @@ If using JSON keys, and the JSON keys expire, then a process to renew the keys w
 ## FAQ
 ### I can connect but don't seem to stay connected
 
-The issue is that your Management Console user has no role.   Go to the Management Console GUI and set the Users role.   
-
+The issue is that your Management Console user has no role.   Go to the Management Console GUI and set the Users role.  Then create a new token and session. 
 
 ### Can I use this Service Account to login to the Management Console WEB GUI?
 
 No you cannot.   A service account cannot be used to login to a Web Browser to authorize Console access
-
 
 ### Can I use one service account into two projects?
 
