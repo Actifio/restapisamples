@@ -11,12 +11,12 @@ To perform Google Cloud Backup and DR REST API operations, you need the followin
 
 ## Getting Management Console details
 
-Once you have deployed Backup and DR, then a management console will be configured.  You need to collect these two pieces of information:
+Once you have deployed Backup and DR, then a management console will be configured.  You need to collect these two pieces of information from the Google Cloud Console.  Go to:  Backup and DR > Show API Credentials 
 
 In this example (yours will be different!):
 
-* Management Console URL:  https://agm-666993295923.backupdr.actifiogo.com/actifio
-* OAuth 2.0 client ID:     486522031570-fimdb0rbeamc17l3akilvquok1dssn6t.apps.googleusercontent.com
+* API URL:  https://agm-123.backupdr.actifiogo.com/actifio
+* OAuth 2.0 client ID:     456-abc.apps.googleusercontent.com
 
 
 ## Creating your Service Account
@@ -60,8 +60,8 @@ Note that some projects may restrict key creation or set time limits on their ex
 
 Now from the host where your service account key is eventually placed we need to activate it:
 ```
-gcloud auth activate-service-account powershell@avwservicelab1.iam.gserviceaccount.com --key-file=avwservicelab1-753d6ff386e3.json
-gcloud config set account powershell@avwservicelab1.iam.gserviceaccount.com 
+gcloud auth activate-service-account apiuser@avwservicelab1.iam.gserviceaccount.com --key-file=avwservicelab1-753d6ff386e3.json
+gcloud config set account apiuser@avwservicelab1.iam.gserviceaccount.com 
 gcloud config set project avwservicelab1
 ```
 At this point we can proceed with the next step.
