@@ -11,7 +11,7 @@ To perform Google Cloud Backup and DR REST API operations, you need the followin
 
 ## Getting Management Console details
 
-Once you have deployed Backup and DR, then a management console will be configured.  You need to collect these two pieces of information from the Google Cloud Console.  Go to:  Backup and DR > Show API Credentials 
+Once you have deployed Backup and DR, then a management console will be configured.  You need to collect these two pieces of information from the Google Cloud Console.  Go to:  **Backup and DR > Show API Credentials**
 
 In this example (yours will be different!):
 
