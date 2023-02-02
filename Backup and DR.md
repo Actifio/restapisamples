@@ -158,6 +158,26 @@ Here is an example:
 }[avw@powershell ~]$ 
 ```
 
+#### Example script
+
+In this example script, you need to modify the BMCNAME, SANAME and OATH to match yours.   This script literally just reports the version of the Management Console:
+```
+#!/bin/bash
+BMCNAME=agm-1234.backupdr.actifiogo.com
+SANAME=apiuser@project1.iam.gserviceaccount.com
+OATH=5678-abcd.apps.googleusercontent.com
+
+# login
+JSON='{"audience":"'$OATH'", "includeEmail":"true"}'
+TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OATH'", "includeEmail":"true"}' | jq -r '.token')
+SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://$BMCNAME/actifio/session | jq -r  '.id')
+# working portion
+VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://$BMCNAME/actifio/config/version | jq -r  '.summary')
+# echo data
+echo $VERSION
+```
+
+
 ## Converting Scripts From Actifio GO to Backup and DR
 
 There are three considerations when converting from Actifio GO:
