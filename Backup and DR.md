@@ -6,8 +6,10 @@ To perform Google Cloud Backup and DR REST API operations, you need the followin
 
 1. A Service Account (or accounts) with the correct roles needs to be selected or created in the relevant project  (that's the project that has access to the Management Console)
 1. A host to run that service account, either:
-    1. A Linux or Windows GCE Instance which has a service account attached that can get generate tokens and which has GCloud CLI and PowerShell installed.
+    1. A Linux or Windows Compute Engine Instance which has a service account attached that can get generate tokens and which has GCloud CLI and PowerShell installed.
     1. A Linux, Mac or Windows host which has GCloud CLI installed and which has a downloaded JSON key for the relevant service account.  
+
+> **Note**:  The host running this script needs access to the internet.  The Management Console cannot be accessed via private connect.  So for a Compute Engine instance this means it needs either an external IP or a Cloud Router/NAT setup.
 
 ## Getting Management Console details
 
@@ -163,10 +165,10 @@ Here is an example:
 In this example script, you need to modify the BMCNAME, SANAME and OATH to match yours.   This script literally just reports the version of the Management Console:
 ```
 #!/bin/bash
+# UPDATE THESE THREE VALUES TO MATCH YOUR ENVIRONMENT
 BMCNAME=agm-1234.backupdr.actifiogo.com
 SANAME=apiuser@project1.iam.gserviceaccount.com
 OATH=5678-abcd.apps.googleusercontent.com
-
 # login
 JSON='{"audience":"'$OATH'", "includeEmail":"true"}'
 TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OATH'", "includeEmail":"true"}' | jq -r '.token')
@@ -176,6 +178,23 @@ VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-ses
 # echo data
 echo $VERSION
 ```
+In this sample script we simplify things.  Because the activated service account is the same account we login to the Management Console with, we don't need to supply.   We instead learn it:
+```
+#!/bin/bash
+# UPDATE THESE TWO VALUES TO MATCH YOUR ENVIRONMENT
+BMCNAME=agm-1234.backupdr.actifiogo.com
+OATH=5678-abcd.apps.googleusercontent.com
+# login
+SANAME=$(gcloud config list account --format "value(core.account)")
+JSON='{"audience":"'$OATH'", "includeEmail":"true"}'
+TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OATH'", "includeEmail":"true"}' | jq -r '.token')
+SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://$BMCNAME/actifio/session | jq -r  '.id')
+# working portion
+VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://$BMCNAME/actifio/config/version | jq -r  '.summary')
+# echo data
+echo $VERSION
+```
+
 
 
 ## Converting Scripts From Actifio GO to Backup and DR
