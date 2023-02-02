@@ -9,6 +9,8 @@ To perform Google Cloud Backup and DR REST API operations, you need the followin
     1. A Linux or Windows GCE Instance which has a service account attached that can get generate tokens and which has GCloud CLI and Python installed.
     1. A Linux, Mac or Windows host which has GCloud CLI installed and which has a downloaded JSON key for the relevant service account.  
 
+> **Note**:  The host running this script needs access to the internet.  The Management Console cannot be accessed via private connect.  So for a Compute Engine instance this means it needs either an external IP or a Cloud Router/NAT setup.
+
 ## Getting Management Console details
 
 Once you have deployed Backup and DR, then a management console will be configured.  You need to collect these two pieces of information from the Google Cloud Console.  Go to:  **Backup and DR > Show API Credentials**
