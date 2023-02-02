@@ -21,6 +21,8 @@ import google.oauth2.id_token
 import google.auth.transport.requests
 import time
 import datetime
+import os
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/path/to/file.json"
 
 # we are disabling SSL warnings, we could add SSL checking to remove need to do this
 import urllib3
