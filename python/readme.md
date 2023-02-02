@@ -5,9 +5,8 @@ This document describes how to configure REST API access to the Google Cloud Bac
 To perform Google Cloud Backup and DR REST API operations, you need the following:
 
 1. A Service Account (or accounts) with the correct roles needs to be selected or created in the relevant project  (that's the project that has access to the Management Console)
-1. A host to run that service account, either:
+1. A host to run that service account, that has:
     1. A Linux or Windows GCE Instance which has a service account attached that can get generate tokens and which has GCloud CLI and Python installed.
-    1. A Linux, Mac or Windows host which has GCloud CLI installed and which has a downloaded JSON key for the relevant service account.  
 
 > **Note**:  The host running this script needs access to the internet.  The Management Console cannot be accessed via private connect.  So for a Compute Engine instance this means it needs either an external IP or a Cloud Router/NAT setup.
 
