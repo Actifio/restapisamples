@@ -170,7 +170,6 @@ BMCNAME=agm-1234.backupdr.actifiogo.com
 SANAME=apiuser@project1.iam.gserviceaccount.com
 OATH=5678-abcd.apps.googleusercontent.com
 # login
-JSON='{"audience":"'$OATH'", "includeEmail":"true"}'
 TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OATH'", "includeEmail":"true"}' | jq -r '.token')
 SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://$BMCNAME/actifio/session | jq -r  '.id')
 # working portion
@@ -186,7 +185,6 @@ BMCNAME=agm-1234.backupdr.actifiogo.com
 OATH=5678-abcd.apps.googleusercontent.com
 # login
 SANAME=$(gcloud config list account --format "value(core.account)")
-JSON='{"audience":"'$OATH'", "includeEmail":"true"}'
 TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OATH'", "includeEmail":"true"}' | jq -r '.token')
 SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://$BMCNAME/actifio/session | jq -r  '.id')
 # working portion
