@@ -7,6 +7,7 @@ To perform Google Cloud Backup and DR REST API operations, you need the followin
 1. A Service Account (or accounts) with the correct roles needs to be selected or created in the relevant project  (that's the project that has access to the Management Console)
 1. A host to run that service account, that has:
     1. A Linux or Windows GCE Instance which has a service account attached that can get generate tokens and which has GCloud CLI and Python installed.
+    1. A Linux, Mac or Windows host which has GCloud CLI installed and which has a downloaded JSON key for the relevant service account.  
 
 > **Note**:  The host running this script needs access to the internet.  The Management Console cannot be accessed via private connect.  So for a Compute Engine instance this means it needs either an external IP or a Cloud Router/NAT setup.
 
@@ -82,8 +83,10 @@ In each script there are two hard coded lines that need to be updated.  Note the
 * bmcname = 'agm-1234.backupdr.actifiogo.com'
 * oath2clientid = '1234-ABCDEF.apps.googleusercontent.com'
 
-
-
+In each script there is a line that needs top be updated or hashed out.   This line is the path to the JSON file where you have activated a service account, rather than attaching one.  So either update this file to use the correct file path to the service account JSON file or hash/remove the line from the python script.
+```
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/path/to/file.json"
+```
 ### Can I use one service account into two projects?
 
 Let's say we have two projects, ProjectA and ProjectB:
