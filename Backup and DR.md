@@ -193,6 +193,72 @@ VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-ses
 echo $VERSION
 ```
 
+## Creating an on demand backup
+
+If we want to create an on-demand backup, we need to learn:
+
+* The Application ID for the application the job will run against
+* The policy ID for the backup in question
+
+### Learning the application ID
+
+We can query the application end point like this, but this will return a lot of data
+```
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/application"
+```
+We can make the output easier to read by doing this to display only applications that managed (creating backups):
+```
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/application?filter=managed:==true" | jq -cr '.items[] | [.id,  .appname, .apptype]'
+```
+Here is an example output:
+```
+["1482152","instance-1","GCPInstance"]
+```
+We now have the application ID for our application (in this example 8766).
+
+### Learning the policy ID
+
+This is done in two parts.   First we need to learn the template (SLT) ID.  So use your application ID like this:
+```
+appid=1482152
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/sla?filter=appid:==$appid" | jq -cr '.items[] | [.slt]'
+```
+Example output:
+```
+[{"id":"1455060","href":"https://agm-249843756318.backupdr.actifiogo.com/actifio/slt/1455060","name":"nosnap","override":"true","sourcename":"nosnap"}]
+```
+Now we have the SLT ID, which in this example is 1455060.
+
+Now we learn the policy IDs in that template.
+```
+sltid=1455060
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/slt/$sltid/policy" | jq -cr '.items[] | [.id, .name, .op]'
+```
+Here is an example of the output, where the ID of our policy in this example is 1455061.
+```
+["1455061","nosnap","snap"]
+```
+### Run the on demand backup
+
+Now we have the appid and policy ID we can run the backup job.
+
+```
+appid=1482152
+policyid=1455061
+curl -w "\n" -sS -XPOST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID"  "https://$BMCNAME/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid}}"
+```
+If this is a database application you need to also specify a backuptype of **log** or **DB** so the JSON data block would look like this:
+```
+appid=8766
+policyid=6718
+backuptype="log"
+curl -w "\n" -sS -XPOST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID"  "https://$BMCNAME/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid},\"backuptype\":\"$backuptype\"}"
+```
+### Track the running job 
+To find running jobs use this command:
+```
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/job" | jq -cr '.items[] | [.jobname, .appname, .status, .progress]'
+```
 
 
 ## Converting Scripts From Actifio GO to Backup and DR
