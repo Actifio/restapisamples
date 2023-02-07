@@ -240,26 +240,35 @@ Here is an example of the output, where the ID of our policy in this example is 
 ```
 ### Run the on demand backup
 
-Now we have the appid and policy ID we can run the backup job.
+Now we have the appid and policy ID we can run the backup job.   Importantly we also need to add a label.   While a label is not mandatory it makes finding the job much easier.   Use a unique label for each job.
 
 ```
 appid=1482152
 policyid=1455061
-curl -w "\n" -sS -XPOST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID"  "https://$BMCNAME/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid}}"
+label="test1"
+curl -w "\n" -sS -XPOST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID"  "https://$BMCNAME/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid},\"label\":\"$label\"}"  
 ```
 If this is a database application you need to also specify a backuptype of **log** or **DB** so the JSON data block would look like this:
 ```
 appid=8766
 policyid=6718
 backuptype="log"
-curl -w "\n" -sS -XPOST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID"  "https://$BMCNAME/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid},\"backuptype\":\"$backuptype\"}"
+label="test1"
+curl -w "\n" -sS -XPOST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID"  "https://$BMCNAME/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid},\"backuptype\":\"$backuptype\",\"label\":\"$label\"}"
 ```
 ### Track the running job 
-To find running jobs use this command:
+To find running jobs use this command.  Remember we are using a label since without a label it is complex to find the job status.
 ```
-curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/job" | jq -cr '.items[] | [.jobname, .appname, .status, .progress]'
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/jobstatus?filter=label:==$label" | jq -cr '.items[] | [.jobname, .appname, .status, .progress]'
 ```
-
+Output will look like this:
+```
+["Job_0080640","centos1","running",8]
+```
+And if you run it after the job finishes you will see:
+```
+["Job_0080640","centos1","succeeded",null]
+```
 
 ## Converting Scripts From Actifio GO to Backup and DR
 
