@@ -162,15 +162,15 @@ Here is an example:
 
 #### Example script
 
-In this example script, you need to modify the BMCNAME, SANAME and OATH to match yours.   This script literally just reports the version of the Management Console:
+In this example script, you need to modify the BMCNAME, SANAME and OAUTH to match yours.   This script literally just reports the version of the Management Console:
 ```
 #!/bin/bash
 # UPDATE THESE THREE VALUES TO MATCH YOUR ENVIRONMENT
 BMCNAME=agm-1234.backupdr.actifiogo.com
 SANAME=apiuser@project1.iam.gserviceaccount.com
-OATH=5678-abcd.apps.googleusercontent.com
+OAUTH=5678-abcd.apps.googleusercontent.com
 # login
-TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OATH'", "includeEmail":"true"}' | jq -r '.token')
+TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OAUTH'", "includeEmail":"true"}' | jq -r '.token')
 SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://$BMCNAME/actifio/session | jq -r  '.id')
 # working portion
 VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://$BMCNAME/actifio/config/version | jq -r  '.summary')
@@ -182,10 +182,10 @@ In this sample script we simplify things.  Because the activated service account
 #!/bin/bash
 # UPDATE THESE TWO VALUES TO MATCH YOUR ENVIRONMENT
 BMCNAME=agm-1234.backupdr.actifiogo.com
-OATH=5678-abcd.apps.googleusercontent.com
+OAUTH=5678-abcd.apps.googleusercontent.com
 # login
 SANAME=$(gcloud config list account --format "value(core.account)")
-TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OATH'", "includeEmail":"true"}' | jq -r '.token')
+TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OAUTH'", "includeEmail":"true"}' | jq -r '.token')
 SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://$BMCNAME/actifio/session | jq -r  '.id')
 # working portion
 VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://$BMCNAME/actifio/config/version | jq -r  '.summary')
