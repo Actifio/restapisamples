@@ -13,13 +13,11 @@ To perform Google Cloud Backup and DR REST API operations, you need the followin
 
 ## Getting Management Console details
 
-Once you have deployed Backup and DR, then a management console will be configured.  You need to collect these two pieces of information from the Google Cloud Console. Go to: **Backup and DR > Show API Credentials**
+Once you have deployed Backup and DR, then a management console will be configured. You need to collect this pieces of information from the Google Cloud Console. Go to: **Backup and DR > Show API Credentials**
 
 In this example (yours will be different!):
 
 * API URL:  https://bmc-1234-xxxyyyzz-dot-asia-southeast1.backupdr.googleusercontent.com/actifio
-* OAuth 2.0 client ID:  456-abc.apps.googleusercontent.com
-
 
 ## Creating your Service Account
 
@@ -78,12 +76,12 @@ You can now proceed to login having 'pre-added' user and assigned it a Managemen
 
 ### Configure the Python script
 
-In each script there are two hard coded lines that need to be updated.  Note the format of the bmname does not have **https** at the start of **/actifio** at the end.
+In each script there is a few lines that need to be updated. Note the format of the bmcname does not have **https** at the start or **/actifio** at the end.
 
 * bmcname = 'bmc-1234-xxxyyyzz-dot-asia-southeast1.backupdr.googleusercontent.com'
-* oath2clientid = '1234-ABCDEF.apps.googleusercontent.com'
+* target_principal = 'python@<YOUR_PROJECT_NAME>.iam.gserviceaccount.com' - Where the ID is the one used for your service account.
 
-In each script there is a line that needs to be updated. This line is the path to the JSON file where you have activated a service account, rather than attaching one. Update this file to use the correct file path to the service account JSON file.
+Lastly, this line is the path to the JSON file where you have activated a service account, rather than attaching one. Update this file to use the correct file path to the service account JSON file.
 ```
 key_path = '/path/to/file.json'
 ```
