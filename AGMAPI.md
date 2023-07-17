@@ -1,6 +1,6 @@
 # Actifio Global Manager API examples
 
-To show some REST API examples for the AGM API.   All examples are working examples, tested and confirmed.
+To show some REST API examples for the AGM API. All examples are working examples, tested and confirmed.
 
 ### Table of Contents
 **[JQ JSON Parser](#jq-json-parser)**<br>
@@ -21,12 +21,11 @@ All examples in this article do NOT use URL encoding.
 
 ## Using variables
 
-All examples will use variables with curl.   This means the IP address is always shown as **$agmip**.   
+All examples will use variables with curl. This means the IP address is always shown as **$agmip**.   
 ```
 agmip=10.10.0.3
 agmuser=apiuser   
 agmpass=Secret1
-
 ```
 ### What Curl options are used in these examples?
 If using Curl we use the following
@@ -37,8 +36,6 @@ Option  Purpose
 * -k : Work with self signed certificates
 * -G  : Send the -d data with a HTTP GET
 * -d  :  Used for additional data that we separate out due to encoding requirements
-
-
 
 ## Creating a Session ID
 
@@ -60,7 +57,7 @@ $ echo $agmsessionid
 
 ### Using base64 encoding to avoid storing passwords in the clear
 
-We can use base 64 encoding to create an encoded sets of credentials.   The syntax looks like this:
+We can use base 64 encoding to create an encoded sets of credentials. The syntax looks like this:
 ```
 echo -n 'admin:password' | base64               
 ```
@@ -85,7 +82,7 @@ agmsessionid=$(curl -w "\n" -sS -k -XPOST -k https://$agmip/actifio/session -H "
 ```
 ### Removing the session
 
-Once you have finished running commands, it is better to remove the session, rather than leave it to time out.   You use this command:
+Once you have finished running commands, it is better to remove the session, rather than leave it to time out. You use this command:
 ```
 curl -s -k -XDELETE https://$agmip/actifio/session/$agmsessionid
 ```
@@ -116,7 +113,7 @@ $
 
 ## Fetching AGM Version
 
-This is the command to get the AGM Version.  It is a useful command to confirm AGM is responding correctly:
+This is the command to get the AGM Version. It is a useful command to confirm AGM is responding correctly:
 ```
 curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/config/versiondetail
 ```
@@ -136,7 +133,7 @@ $ curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/ac
 ```
 ## Fetching Session Details
 
-When you login to create a session, you get the Session ID details.    You can fetch these again using any of these commands:
+When you login to create a session, you get the Session ID details. You can fetch these again using any of these commands:
 ```
 curl -sS -X GET -k https://$agmip/actifio/session/$agmsessionid
 curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/session/current
@@ -149,18 +146,18 @@ curl -sS -X GET -H "Authorization: Actifio $agmsessionid" -k https://$agmip/acti
 
 If we want to get the details of our mounts we can use a command like this:
 ```
-curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/backup?filter=jobclass:==mount" | jq -cr '.items[] | [.id, .backupname,  .appname]'
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/backup?filter=jobclass:==mount" | jq -cr '.items[] | [.id, .backupname, .appname]'
 ```
 
 This tells us the backup ID being used by AGM.  Note that this is a different ID than the VDP appliance will be using, but the backup name will be the same:
 ```
-$ curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/backup?filter=jobclass:==mount" | jq -cr '.items[] | [.id, .backupname,  .appname]'
+$ curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/backup?filter=jobclass:==mount" | jq -cr '.items[] | [.id, .backupname, .appname]'
 ["85082","Image_0110695","mysqld_3306"]
 ```
 
 ### Fetching Container mount YAML
 
-We need to run this command against the backup ID.  In this example it is 85082 (yours will be different):
+We need to run this command against the backup ID. In this example it is 85082 (yours will be different):
 ```
 curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k https://$agmip/actifio/backup/85082
 ```
@@ -208,7 +205,7 @@ curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $
 ```
 We can make the output easier to read by doing this to display only applications that managed (creating backups):
 ```
-curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/application?filter=managed:==true" | jq -cr '.items[] | [.id,  .appname, .apptype]'
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/application?filter=managed:==true" | jq -cr '.items[] | [.id, .appname, .apptype]'
 ```
 Here is an example output:
 ```
@@ -218,7 +215,7 @@ We now have the application ID for our application (in this example 8766).
 
 ### Learning the policy ID
 
-This is done in two parts.   First we need to learn the template (SLT) ID.  So use your application ID like this:
+This is done in two parts. First we need to learn the template (SLT) ID. So use your application ID like this:
 ```
 appid=8766
 curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Actifio $agmsessionid" -k "https://$agmip/actifio/sla?filter=appid:==$appid" | jq -cr '.items[] | [.slt]'

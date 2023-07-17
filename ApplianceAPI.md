@@ -1,7 +1,7 @@
 
 # Actifio Sky Appliance API examples
 
-To show some REST API examples for the Appliance API.   Each example shows a udsinfo or udstask command and then shows the REST equivalent.   All examples are working examples, tested and confirmed.
+To show some REST API examples for the Appliance API. Each example shows a udsinfo or udstask command and then shows the REST equivalent. All examples are working examples, tested and confirmed.
 
 ### Table of Contents
 **[JQ JSON Parser](#jq-json-parser)**<br>
@@ -37,7 +37,7 @@ All examples in this article do NOT use URL encoding.
 
 ## Using variables
 
-All examples will use variables with curl.   This means the IP address is always shown as **$vdpip**.   In a bash script the login parts could get assembled like this:
+All examples will use variables with curl. This means the IP address is always shown as **$vdpip**. In a bash script the login parts could get assembled like this:
 ```
 #!/bin/bash
 # IP is hardset but could be fetched as a parm like this:
@@ -86,24 +86,24 @@ sessionid=$(curl -w "\n" -s -k -XPOST "https://$vdpip/actifio/api/login?name=$vd
 ```
 There may be other commands that use characters that need to be URL encoded, so we can use a syntax like this:
 ```
-curl -sS -w "\n" -k -G  "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=remote-dedup"  -d "sessionid=$sessionid" | jq
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode "filtervalue=jobclass=remote-dedup" -d "sessionid=$sessionid" | jq
 ```
 ### What Curl options are used in these examples?
 If using Curl we use the following
 Option  Purpose
 * -s  : Silent Mode. This stops download progress messages appearing on the screen.
 * -S  : Print errors that might be stopped by -s
-* -w "\n" :   Print a new line at the end of the output
+* -w "\n" : Print a new line at the end of the output
 * -k : Work with self signed certificates
 * -G  : Send the -d data with a HTTP GET
-* -d  :  Used for additional data that we separate out due to encoding requirements
+* -d  : Used for additional data that we separate out due to encoding requirements
 
 ### Can I use wget instead of curl?
-The examples here all use curl, but you can use wget.  Here are some working examples:
+The examples here all use curl, but you can use wget. Here are some working examples:
 The options used are:
-* --no-check-certificate  : Because the certificate used is self-signed.
+* --no-check-certificate : Because the certificate used is self-signed.
 * -q  : Quiet option to stop so many messages getting printed to the screen
-* -O - : To force output to be printed to the screen  (you need the trailing dash after -O)
+* -O - : To force output to be printed to the screen (you need the trailing dash after -O)
 
 ### Check the cluster is up:
 ```
@@ -116,12 +116,12 @@ wget --no-check-certificate -q -O -  https://172.24.1.180/actifio/api/version| j
 
 ### Get a session ID:
 
-In this example we double quote the URL to avoid the need to use backslashes.  We then push to jq to pull out just the session ID
+In this example we double quote the URL to avoid the need to use backslashes. We then push to jq to pull out just the session ID
 ```
 wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey" | jq  '.sessionid'
 "a45a601d-701c-4f81-9da8-5f1802d87f6e"
 ```
-We can place the session ID into a variable.  Make sure to use -r to remove the double quotes.
+We can place the session ID into a variable. Make sure to use -r to remove the double quotes.
 ```
 sessionid=$(wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey" | jq -r '.sessionid')
 ```
@@ -139,8 +139,8 @@ wget --no-check-certificate -q -O - "https://$vdpip/actifio/api/info/lsjob?sessi
 ```
 ##  Fetching Appliance version
 
-Normally to get the Appliance version we use this udsinfo command:   udsinfo lsversion
-The version command is the only REST command that does not need authentication.   It is a good way to check the Actifio Appliance is accessible.
+Normally to get the Appliance version we use this udsinfo command: udsinfo lsversion
+The version command is the only REST command that does not need authentication. It is a good way to check the Actifio Appliance is accessible.
 ```
 $ curl -s -k  https://172.24.1.180/actifio/api/version
 {"result":"6.1 (6.1.8.61044)","status":0}
@@ -220,7 +220,7 @@ The output is:
 ```
 We want just the session ID, so use JQ to parse it out, asking just for the sessionid using:      jq  '.sessionid'
 ```
-curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq  '.sessionid'
+curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq '.sessionid'
 "fd8c3c03-5f64-4126-a6c8-27e60dfbc44e"
 ```
 If we want to remove the double quotes, use -r like this:    
@@ -228,7 +228,7 @@ If we want to remove the double quotes, use -r like this:
 jq -r  '.sessionid'
 ```
 ```
-curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq -r  '.sessionid'
+curl -w "\n" -sS -k -XPOST "https://$vdpip/actifio/api/login?name=$vdpuser&password=$vdppass&vendorkey=$vdpkey"| jq -r '.sessionid'
 24a87504-0791-4af2-87e1-f6cc00f30748
 ```
 So now we get to this.  We could add error handling, if the output is null, it is because the password didn't work or we couldn't find the device.
@@ -254,7 +254,7 @@ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid
 ```
 To list all jobs and format in a nice way:
 ```
-$ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid| jq -cr  '["Jobname", "Jobclass", "HostName"], "AppName"], "TargetHost", "Status", "Progress"]],(.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress])'
+$ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid| jq -cr '["Jobname", "Jobclass", "HostName"], "AppName"], "TargetHost", "Status", "Progress"]],(.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress])'
 ["gc_22179120","gc","","","","running","37"]
 ["gc_22179120_000E","gc","","","","running","37"]
 ["Job_22179498","remote-dedup","demo-sql-6","C:\\","","running","78"]
@@ -288,7 +288,7 @@ $ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid
 ["Job_22179510","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ["Job_22179506_00","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ```
-To list just remote-dedup jobs using filter value.   We need to turn this command into REST:
+To list just remote-dedup jobs using filter value. We need to turn this command into REST:
 ```
 udsinfo lsjob -filtervalue jobclass=remote-dedup
 $ curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid&filtervalue=jobclass=remote-dedup"| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
@@ -299,7 +299,7 @@ $ curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsjob?sessionid=$sessioni
 ["Job_22179502_00","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ```
 If we want just remote-dedups and no subjobs: we need to add another filter value of parentid=0.
-We need to turn this command into REST.   Note because we connect the two filter values with an '&' we need to either escape it with a back slash or double quote the command:
+We need to turn this command into REST. Note because we connect the two filter values with an '&' we need to either escape it with a back slash or double quote the command:
 ```
 udsinfo lsjob -filtervalue "jobclass=remote-dedup&parentid=0"
 ```
@@ -307,7 +307,7 @@ or
 ```
 udsinfo lsjob -filtervalue jobclass=remote-dedup\&parentid=0
 ```
-However since we are actually using two filter values of jobclass=remote-dedup and parentid=0  in REST this means I have two choices.
+However since we are actually using two filter values of jobclass=remote-dedup and parentid=0 in REST this means I have two choices.
 The first is to URL encode the middle '&' into a %26.
 ```
 $ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid\&filtervalue=jobclass=remote-dedup%26parentid=0| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
@@ -316,7 +316,7 @@ $ curl -sS -w "\n" -k https://$vdpip/actifio/api/info/lsjob?sessionid=$sessionid
 ["Job_22179506","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ["Job_22179510","remote-dedup","demo-sql-6","C:\\","","running","78"]
 ```
-To avoid doing this, we need to use different syntax like this.   This splits the session ID out and allows us to avoid URL encoding in the filter value.
+To avoid doing this, we need to use different syntax like this. This splits the session ID out and allows us to avoid URL encoding in the filter value.
 ```
 curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsjob" --data-urlencode "filtervalue=jobclass=remote-dedup&parentid=0"-d "sessionid=$sessionid"| jq -cr '.result[] | [.jobname, .jobclass, .hostname, .appname, .targethost, .status, .progress]'
 ```
@@ -428,7 +428,7 @@ udsinfo lshost -filtervalue hostname=demo-oracle-4
 curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lshost?sessionid=$sessionid&filtervalue=hostname=demo-oracle-4" | jq -rc '.result[] | [.id, .hostname]'
 ["20929573","demo-oracle-4"]
 ```
-Now we know mounted  host ID, we can learn backup name
+Now we know mounted host ID, we can learn backup name
 ```
 udsinfo lsbackup -filtervalue jobclass=mount\&mountedhost=20929573
 ```
@@ -436,7 +436,7 @@ udsinfo lsbackup -filtervalue jobclass=mount\&mountedhost=20929573
 curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlencode"filtervalue=jobclass=mount&mountedhost=20929573" -d sessionid=$sessionid| jq -rc '.result[] | [.id, .backupname, .label]'
 ["22189218","Image_22189211",""]
 ```
-(see how the Job_xxxx  number to create can be used to find the image, which is usually Image_xxxx)
+(see how the Job_xxxx number to create can be used to find the image, which is usually Image_xxxx)
 ```
 udstask unmountimage -image Image_22188094 -delete
 ```
@@ -527,7 +527,7 @@ curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlenco
   }
 ]
 ```
-Without the filter value we get much more detail.  Note for restful we need to use 'argument=xxxxx'
+Without the filter value we get much more detail. Note for restful we need to use 'argument=xxxxx'
 ```
 udsinfo lsbackup 22185180
 ```
@@ -735,7 +735,7 @@ tmpfs                 4.9G  311M  4.6G   7% /dev/shm
                        54G  911M   51G   2% /mnt/jsontest
 ```
 Multiple mount points per image
-Lets say we have an Oracle backup that has a log disk and a database disk.     We learn what the mount points are called:
+Lets say we have an Oracle backup that has a log disk and a database disk. We learn what the mount points are called:
 ```
 udsinfo lsbackup 22349758 | grep dasvol
     uniqueid dasvol:smalldb
@@ -743,7 +743,7 @@ udsinfo lsbackup 22349758 | grep dasvol
 ```
 Which gives us this command:
 ```
-curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22349758"| jq '.result | ."    uniqueid"'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22349758"| jq '.result | ." uniqueid"'
 [
   "dasvol:smalldb",
   "dasvol:smalldb_archivelog"
@@ -792,10 +792,10 @@ udsinfo lsbackup 22196359
 ```
 Notice the long space in the name of the variable, this is as per the source.
 ```
-curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22196359"| jq '.result | ."    uniqueid"'
+curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22196359"| jq '.result | ." uniqueid"'
 "dasvol:S:\\"
 ```
-The big change is we add provisioning options.   There is an appaware flag but we don't need to use it, since we are using the provisioning options.
+The big change is we add provisioning options. There is an appaware flag but we don't need to use it, since we are using the provisioning options.
 ```
 udstask mountimage -image 22196359-host demo-sql-4 -restoreoption 'mountpointperdisk-dasvol:S:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><sqlinstance>DEMO-SQL-4</sqlinstance><dbname>jsontest</dbname><recover>true</recover></provisioning-options>'
 ```
@@ -820,7 +820,7 @@ curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?session
 App Aware SQL mount to drive letter
 We have two drives in the source volume:
 ```
-curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22330658" | jq '.result | ."    uniqueid"'
+curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22330658" | jq '.result | ." uniqueid"'
 [
   "dasvol:L:\\",
   "dasvol:S:\\"
@@ -875,7 +875,7 @@ curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsrestoreoptions?application
 ["mapdiskstoallclusternodes"]
 ["provisioningoptions"]
 ```
-How do we get provisioning options listed?  (note this only works in 7.0 code and higher)
+How do we get provisioning options listed? (note this only works in 7.0 code and higher)
 1)  List all my app classes:     
 ```
 udsinfo lsappclass
@@ -922,15 +922,15 @@ udsinfo lsbackup  22346908
 ```
 Notice the long space in the name of the variable, this is as per the source field.
 ```
-curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22346908" | jq '.result | ."    uniqueid"'
+curl -sS -w "\n" -k "https://$vdpip/actifio/api/info/lsbackup?sessionid=$sessionid&argument=22346908" | jq '.result | ." uniqueid"'
 "dasvol:C:\\"
 ```
-The big change is we add provisioning options.   There is an appaware flag but we don't need to use it, since we are using the provisioning options.
-We cannot choose names for the DBs because they are in a group, so instead we use a prefix.  In this example it is jsontest
+The big change is we add provisioning options. There is an appaware flag but we don't need to use it, since we are using the provisioning options.
+We cannot choose names for the DBs because they are in a group, so instead we use a prefix. In this example it is jsontest
 ```
 udstask mountimage -image 22346908-host demo-sql-4 -restoreoption 'mountpointperdisk-dasvol:C:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><ConsistencyGroupName>testme</ConsistencyGroupName><sqlinstance>DEMO-SQL-4</sqlinstance><dbnameprefix>jsontest</dbnameprefix><recover>true</recover><username></username></provisioning-options>'
 ```
-We put this into a REST command without any URL encoding (leave that to curl).  Note in this example we use single quotes around the data that needs encoding.
+We put this into a REST command without any URL encoding (leave that to curl). Note in this example we use single quotes around the data that needs encoding.
 ```
 curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "image=22346908&host=demo-sql-4&sessionid=$sessionid" --data-urlencode 'restoreoption=mountpointperdisk-dasvol:C:\=C:\Test\jsontest,provisioningoptions=<provisioning-options><ConsistencyGroupName>testme</ConsistencyGroupName><sqlinstance>DEMO-SQL-4</sqlinstance><dbnameprefix>jsontest</dbnameprefix><recover>true</recover><username></username></provisioning-options>' | jq
 {
@@ -938,7 +938,7 @@ curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "i
   "status": 0
 }
 ```
-We get this result.   You can see the mount point and three DBs with jsontest added to their names as a prefix.
+We get this result. You can see the mount point and three DBs with jsontest added to their names as a prefix.
 Now it is time to unmount
 ```
 udstask unmountimage -image Image_22347408 -delete
@@ -961,7 +961,7 @@ udsinfo lsbackup -filtervalue jobclass=snapshot\&appid=20837997
 ```
 Lets learn appid, hostname, app name , backup ID and  consistency date.
 ```
-curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "filtervalue=jobclass=snapshot&appid=20837997"  | jq -c '.result [] | [.appid, .hostname, .appname, .id, .consistencydate]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "filtervalue=jobclass=snapshot&appid=20837997" | jq -c '.result [] | [.appid, .hostname, .appname, .id, .consistencydate]'
 ["20837997","Oracle-Prod","bigdb","22278630","2015-12-08 02:24:20.000"]
 ["20837997","Oracle-Prod","bigdb","22307252","2015-12-08 14:25:34.000"]
 ["20837997","Oracle-Prod","bigdb","22313415","2015-12-09 02:24:33.000"]
@@ -971,8 +971,8 @@ curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=
 ```
 We have chosen to use 22187858.
 We are going to let the system choose where to mount the DB to.
-The big change is we add provisioning options.   There is an appaware flag but we don't need to use it, since we are using the provisioning options.
-These are some provisioning options we can set.   To learn how to find more, the commands are listed at the bottom of this example.
+The big change is we add provisioning options. There is an appaware flag but we don't need to use it, since we are using the provisioning options.
+These are some provisioning options we can set. To learn how to find more, the commands are listed at the bottom of this example.
 ```
 <provisioning-options>
 <databasesid>jsontest</databasesid>
@@ -989,7 +989,7 @@ These are some provisioning options we can set.   To learn how to find more, the
 <envvar></envvar>
 </provisioning-options>
 ```
-Here is our udsinfo command.  Note we encase our provisioning options inside single quotes so they don't have escape issues with all the characters in there.
+Here is our udsinfo command. Note we encase our provisioning options inside single quotes so they don't have escape issues with all the characters in there.
 ```
 udstask mountimage -image 22187858-host demo-oracle-4 -restoreoption 'provisioningoptions=<provisioning-options><databasesid>jsontest</databasesid><username>oracle</username><orahome>/home/oracle/app/oracle/product/11.2.0/dbhome_1</orahome><tnsadmindir>/home/oracle/app/oracle/product/11.2.0/dbhome_1/network/admin</tnsadmindir><totalmemory></totalmemory><sgapct></sgapct><tnsip></tnsip><tnsport></tnsport><tnsdomain></tnsdomain><rrecovery>true</rrecovery><standalone>false</standalone><envvar></envvar></provisioning-options>'
 ```
@@ -1001,7 +1001,7 @@ We run the command and get a successful job:
 ```
 {"result":"Job_22202340 to mount Image_22187857 completed","status":0}
 ```
-Having run the command we can now login to my Oracle server and validate.  Note the job number is in the mount:
+Having run the command we can now login to my Oracle server and validate. Note the job number is in the mount:
 ```
 [oracle@demo-oracle-4 ~]$ df
 Filesystem            1K-blocks       Used Available Use% Mounted on
@@ -1041,7 +1041,7 @@ How do we get restore options listed?
 ```
 udsinfo lsappclass
 ```
-2) List all restore options per app class using a target host ID:    
+1) List all restore options per app class using a target host ID:    
 ```
 udsinfo lsrestoreoptions -applicationtype Oracle-action mount -targethost 20933867
 ```
@@ -1051,13 +1051,13 @@ How do we get provisioning options listed?
 ```
 udsinfo lsappclass
 ```
-2)  List all provisioning options per app class:    
+1)  List all provisioning options per app class:    
 ```
 udsinfo lsappclass Oracle
 ```
 ## Example 8: Oracle App Aware mount with recovery time
 We may want to use App Aware mount to bring our Oracle database online and roll the logs forward to a particular point in time.
-When doing this we need to use the host points in time.   While this is clearly shown in the Actifio Desktop, in the CLI you need to ensure you work with the correct time range.
+When doing this we need to use the host points in time. While this is clearly shown in the Actifio Desktop, in the CLI you need to ensure you work with the correct time range.
 In this example the user 'av' has a timezone of Melbourne Australia, while the source host is in the Boston USA timezone.
 ```
 Actifio:sa-hq:av> udsinfo lsuser av | grep time
@@ -1072,7 +1072,7 @@ Actifio:sa-hq:av> udsinfo lsbackup Image_22349754 | grep pit
 ```
 We can grab the host pit range quite easily with this REST command:
 ```
-curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22349754" | jq  '.result | [."  timezone", ."  
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22349754" | jq '.result | [."  timezone", ."  
 hostbeginpit", ."  hostendpit" ]'
 [
   "GMT-0500",
@@ -1092,7 +1092,7 @@ One way to validate the command was issued correctly on the target host is to ch
 ```
 cat /var/act/log/UDSAgent.log | grep "recover database until time"
 ```
-We should see an entry like this where the host time specified in the original command can clearly be seen.  Note the mount point contains the job number which makes it easier to find the correct entry.
+We should see an entry like this where the host time specified in the original command can clearly be seen. Note the mount point contains the job number which makes it easier to find the correct entry.
 ```
 run { catalog start with '/act/mnt/Job_22362562_mountpoint_1449888060617/archivelog' noprompt; catalog start with '/act/mnt/Job_22362562_mountpoint_1449888103502/archivelog' noprompt; recover database until time "to_date('201512110410','yyyymmddhh24mi')"; }
 ```
@@ -1100,7 +1100,7 @@ run { catalog start with '/act/mnt/Job_22362562_mountpoint_1449888060617/archive
 We may want to use App Aware mount to bring our Oracle database online and roll the logs forward to a particular point in time.
 We also want to choose where it mounts.
 We also want to re-protect it.
-When doing this we need to use the host points in time.   While this is clearly shown in the Actifio Desktop, in the CLI you need to ensure you work with the correct time range.
+When doing this we need to use the host points in time. While this is clearly shown in the Actifio Desktop, in the CLI you need to ensure you work with the correct time range.
 In this example the user 'av' has a timezone of Melbourne Australia, while the source host is in the Boston USA timezone.
 ```
 Actifio:sa-hq:av> udsinfo lsuser av | grep time
@@ -1121,7 +1121,7 @@ Actifio:sa-hq:av> udsinfo lsbackup Image_22370949 | grep dasvol
 ```
 We can grab the host pit range and dasvol details quite easily with this REST command:
 ```
-curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22370949" | jq  '.result | [."  timezone", ."  hostbeginpit", ."  hostendpit",."    uniqueid" ]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22370949" | jq '.result | [."  timezone", ."  hostbeginpit", ."  hostendpit",." uniqueid" ]'
 [
   "GMT-0500",
   "2015-12-14 12:03:58",
@@ -1194,16 +1194,16 @@ tmpfs                  5065472   310180   4755292   7% /dev/shm
 /dev/sdb              51475068  2031900  46821728   5% /mnt/smalldb
 /dev/sdc              51475068    82992  48770636   1% /mnt/smalldb_logs
 ```
-2)  Did the logs roll forward?
+1)  Did the logs roll forward?
 On the target host we run:
 ```
 cat /var/act/log/UDSAgent.log | grep "recover database until time"
 ```
-We should see an entry like this where the host time specified in the original command can clearly be seen.  Note the mount point contains the job number which makes it easier to find the correct entry.
+We should see an entry like this where the host time specified in the original command can clearly be seen. Note the mount point contains the job number which makes it easier to find the correct entry.
 ```
 run { catalog start with '/act/mnt/Job_22362562_mountpoint_1449888060617/archivelog' noprompt; catalog start with '/act/mnt/Job_22362562_mountpoint_1449888103502/archivelog' noprompt; recover database until time "to_date('201512110410','yyyymmddhh24mi')"; }
 ```
-3)  Did we get a new application?
+1)  Did we get a new application?
 Lets look for apps with our new DB name and target host name.
 ```
 udsinfo lsapplication -filtervalue "appname=jsontest&hostname=demo-oracle-4"
@@ -1215,7 +1215,7 @@ curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsapplication" --data-ur
 ```
 There is our application ID: 22375678
 
-4)  Does the new application have any snapshots?
+1)  Does the new application have any snapshots?
 ```
 udsinfo lsbackup -filtervalue "appid=22375678&jobclass=snapshot"
 ```
@@ -1226,7 +1226,7 @@ curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlenco
 ```
 If you do not find a snapshot, maybe one is still being created or maybe your new application did not get protected.
 Once we are finished we can start tearing this all down:
-5)  Lets clean them up:
+1)  Lets clean them up:
 ```
 usdtask expireimage -image 22375693
 ```
@@ -1235,7 +1235,7 @@ In REST that is:
 curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/expireimage" -d "image=22375693" -d "sessionid=$sessionid"
 {"result":"Job_22375751 to expire Image_22375691 completed","status":0}
 ```
-6)  Lets get rid of the application:
+1)  Lets get rid of the application:
 ```
 udstask rmapplication 22375678
 ```
@@ -1246,15 +1246,15 @@ curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/rmapplication" -d
 ## Example 10: Oracle App Aware mount to RAC
 We may want to use App Aware mount to bring our Oracle database online to a RAC cluster.
 We need to assemble several pieces of information to do this.
-First up the RAC members need to be defined to Actifio as hosts.   We need to know their IP addresses.
-We also need to have an ASM backup.   In this example we know Image_22336426 is ASM as per this attribute:
+First up the RAC members need to be defined to Actifio as hosts. We need to know their IP addresses.
+We also need to have an ASM backup. In this example we know Image_22336426 is ASM as per this attribute:
 ```
 udsinfo lsbackup Image_22336426 | grep isasm
 isasm true
 ```
-We are interested in this:  isasmbeing true
+We are interested in this: isasmbeing true
 ```
-curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22336426" | jq -c '.result | [.id, .isasm, .consistencydate, ."  beginpit", ."  endpit" ]'
+curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" -d "sessionid=$sessionid" --data-urlencode "argument=Image_22336426" | jq -c '.result | [.id, .isasm, .consistencydate, ." beginpit", ."  endpit" ]'
 ["22336430","true","2015-12-11 04:06:27.000","2015-12-11 04:06:27","2015-12-11 14:01:55"]
 ```
 In this example the ASM node list is 172.24.1.231  and 172.24.1.232
@@ -1339,7 +1339,6 @@ Will be one of:
 * gcp
 * vmware
 
-
 ##### volumeType
 
 The output of
@@ -1394,7 +1393,6 @@ We download this from the Service Account section of the IAM console.
 In this example we save it as a file avkey.json
 Note that while it is not shown as mandatory, it is in reality a mandatory requirement.
 
-
 ###  Final command
 
 We build our variables.  Because privateIpAddresses is not mandatory, we are not going to specify one.
@@ -1416,9 +1414,9 @@ udstask mountimage -image $imageid -systemprops "vmname=$gcpNewVMName, regionCod
 
 ## Example 12: Mounting to Containers 
 
-NOTE.   TO display Container YAML, you need to use AGM API.  See the example here:  https://github.com/Actifio/restapisamples/blob/main/AGMAPI.md#fetching-container-mount-yaml
+NOTE. TO display Container YAML, you need to use AGM API. See the example here:  https://github.com/Actifio/restapisamples/blob/main/AGMAPI.md#fetching-container-mount-yaml
 
-To mount to a Container, we just add **-container** to our mount command.  If we want to limit which hosts can access the mount, then we can specify this using the **-host** parm.   So in this example we present **Image_0022259** to IP addresses **10.1.1.1** and **10.2.2.2**.  If we want to add more IPs, just comma separate them:
+To mount to a Container, we just add **-container** to our mount command.  If we want to limit which hosts can access the mount, then we can specify this using the **-host** parm. So in this example we present **Image_0022259** to IP addresses **10.1.1.1** and **10.2.2.2**. If we want to add more IPs, just comma separate them:
 ```
 udstask mountimage -image Image_0022259 -host "10.1.1.1,10.2.2.2" -container -nowait
 ```
@@ -1439,7 +1437,7 @@ curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "c
 
 ### Opening access to any host
 
-If you want any IP to be able to get the mount so Target Host  is * (Any host), then drop the host field:
+If you want any IP to be able to get the mount so Target Host is * (Any host), then drop the host field:
 ```
 udstask mountimage -image Image_0022259 -container -nowait
 ```
@@ -1450,7 +1448,7 @@ curl -sS -w "\n" -k -XPOST -G "https://$vdpip/actifio/api/task/mountimage" -d "c
 
 ### Specifying mount points
 
-If we want to specify mount points, the udstask mountimage command you want looks like this, where we take the volume **/dev/vgdata/mysqldata** and suggest the host use this mount point:  **/mount/it/here**
+If we want to specify mount points, the udstask mountimage command you want looks like this, where we take the volume **/dev/vgdata/mysqldata** and suggest the host use this mount point: **/mount/it/here**
 ```
 udstask mountimage -image Image_0111783 -container -restoreoption "mountpointperdisk-dasvol:/dev/vgdata/mysqldata=/mount/it/here"
 ```
@@ -1496,7 +1494,7 @@ curl -sS -w "\n" -k -G "https://$vdpip/actifio/api/info/lsbackup" --data-urlenco
 ```
 
 
-To mount a cloud snapshot as a new GCE Instance we need to know the image ID and we need to know the cloudcredential and project.   We then need to supply cloud specific information.
+To mount a cloud snapshot as a new GCE Instance we need to know the image ID and we need to know the cloudcredential and project. We then need to supply cloud specific information.
 
 This is the most minimal command that will work (in order):
 
@@ -1508,8 +1506,8 @@ This is the most minimal command that will work (in order):
 * We supply the desired instancename
 * We supply the desired zone
 * We supply if we want the new VM to be powered on
-* We supply the subnet for nic0, using a URL.  You cannot just use the name.
-* We supply the VPC for nic0 (the network)using a URL.   you cannot just use the name.
+* We supply the subnet for nic0, using a URL. You cannot just use the name.
+* We supply the VPC for nic0 (the network)using a URL. you cannot just use the name.
 * If we want nic1 we can add it separately
 
 We need the cloud credential ID.   
@@ -1539,8 +1537,8 @@ udstask mountimage -image $imageid.id -systemprops '{"cloudcredential":4441,"pro
 
 There are four things we can do on top of this:
 
-1)  Add networktags as network tag like:   networktag=[http-server:https-server]
-2)  Add Labels to the VM like this:  tags=[dog|cat:pig|cow]
+1)  Add networktags as network tag like: networktag=[http-server:https-server]
+2)  Add Labels to the VM like this: tags=[dog|cat:pig|cow]
 3)  Add an external IP and a defined internal IP like this:
 ```
 "subnet=https://www.googleapis.com/compute/v1/projects/lab1/regions/australia-southeast1/subnetworks/default:vpc=https://www.googleapis.com/compute/v1/projects/lab1/global/networks/default:privateips=10.152.0.200:externalip=true"
@@ -1572,10 +1570,6 @@ This is a REST API example of the same command:
 ```
 curl -sS -w "\n" -k -XPOST "https://$vdpip/actifio/api/task/unmountimage?sessionid=$sessionid&image=Image_0020813&delete&preservevm"
 ```
-
-
-
-
 
 ## Listing hosts and getting their connector version
 Lets find what version connector is installed on our hosts:
@@ -1726,12 +1720,12 @@ curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessio
 }
 ```
 First up if we look at the output we want to understand there are two sections, the resultsection and the statussection.
-If you want the result or the status, ask for it you get just that section.   The status section is rather short.
+If you want the result or the status, ask for it you get just that section. The status section is rather short.
 ```
 curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.status'
 0
 ```
-If we grab the result section, lets ask for what is inside the box in the results section,  this is normally what is most interesting:
+If we grab the result section, lets ask for what is inside the box in the results section, this is normally what is most interesting:
 ```
 curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.result []'
 {
@@ -1759,14 +1753,14 @@ curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessio
   "mdiskgrp": "act_per_pool000"
 }
 ```
-We can flatten the output with -c (compact).   Because there are not many fields, this flattens nicely.   Most output have lots of fields so spread across multiple lines.
+We can flatten the output with -c (compact). Because there are not many fields, this flattens nicely. Most output have lots of fields so spread across multiple lines.
 ```
 curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -c '.result []'
 {"id":"71","modifydate":"2015-10-01 04:00:57.144","warnpct":"77","name":"act_pri_pool000","safepct":"90","mdiskgrp":"act_pri_pool000"}
 {"id":"72","modifydate":"2015-08-30 10:08:12.332","warnpct":"90","name":"act_ded_pool000","safepct":"100","mdiskgrp":"act_ded_pool000"}
 {"id":"73","modifydate":"2015-10-01 03:42:03.440","warnpct":"81","name":"act_per_pool000","safepct":"85","mdiskgrp":"act_per_pool000"}
 ```
-One of the nice things is we can keep piping the output for further processing without running jq twice.   In this example we first strip out the results and then ask for just the pool names:
+One of the nice things is we can keep piping the output for further processing without running jq twice. In this example we first strip out the results and then ask for just the pool names:
 ```
 curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq '.result [] | .name'
 "act_pri_pool000"
@@ -1814,7 +1808,7 @@ curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessio
 ```
 We still have double quotes.   They are not being removed by 'raw' option.
 We can use sed:   sed 's/\"//g'
-NOTE - double quotes in CSV are both legal and necessary.   Host names and App Names contain commas.  The double quotes stop them being used as field delimiters.
+NOTE - double quotes in CSV are both legal and necessary. Host names and App Names contain commas. The double quotes stop them being used as field delimiters.
 ```
 curl -s -w "\n" -k "https://$vdpip/actifio/api/info/lsdiskpool?sessionid=$sessionid"| jq -cr '["PoolName", "PoolID"], (.result [] | [.name, .id]) | @csv' |  sed 's/\"//g'
 PoolName,PoolID
@@ -1825,7 +1819,7 @@ act_per_pool000,73
 
 ## Importing OnVault images
 
-To import OnVault images we need to know two things, the diskpool name and the cluster name.  The cluster may be totally foreign to the Appliance you are importing into.   First learn the disk pool from this command:
+To import OnVault images we need to know two things, the diskpool name and the cluster name. The cluster may be totally foreign to the Appliance you are importing into. First learn the disk pool from this command:
 ```
 udsinfo lsdiskpool 
 ```
@@ -1868,5 +1862,3 @@ londonsky.c.avwlab2.internal_Image_0067585
 londonsky.c.avwlab2.internal_Image_0066561
 londonsky.c.avwlab2.internal_Image_0062748
 ```
-
-
