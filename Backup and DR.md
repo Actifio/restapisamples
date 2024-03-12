@@ -120,7 +120,7 @@ curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H 
 This command will create a token. Place that token into a variable called $TOKEN
 To use JQ to do this:
 ```
-TOKEN=$(curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json; charset=utf-8" -d '{"scope": "https://www.googleapis.com/auth/cloud-platform","lifetime": "3600s"}' "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/powershell@avwservicelab1.iam.gserviceaccount.com:generateAccessToken" | jq -r '.accessToken')
+TOKEN=$(curl -s -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json; charset=utf-8" -d '{"scope": "https://www.googleapis.com/auth/cloud-platform","lifetime": "3600s"}' "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/powershell@avwservicelab1.iam.gserviceaccount.com:generateAccessToken" | jq -r '.accessToken')
 ```
 
 #### Step two - create a session ID
@@ -165,7 +165,7 @@ BMCNAME=https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleuse
 SANAME=apiuser@project1.iam.gserviceaccount.com
 OAUTH=5678-abcd.apps.googleusercontent.com
 # login
-TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OAUTH'", "includeEmail":"true"}' | jq -r '.token')
+TOKEN=$(curl -s -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json; charset=utf-8" -d '{"scope": "https://www.googleapis.com/auth/cloud-platform","lifetime": "3600s"}' "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateAccessToken" | jq -r '.accessToken')
 SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0" https://$BMCNAME/actifio/session | jq -r  '.id')
 # working portion
 VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://$BMCNAME/actifio/config/version | jq -r  '.summary')
@@ -180,7 +180,7 @@ BMCNAME=https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleuse
 OAUTH=5678-abcd.apps.googleusercontent.com
 # login
 SANAME=$(gcloud config list account --format "value(core.account)")
-TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OAUTH'", "includeEmail":"true"}' | jq -r '.token')
+TOKEN=$(curl -s -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json; charset=utf-8" -d '{"scope": "https://www.googleapis.com/auth/cloud-platform","lifetime": "3600s"}' "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateAccessToken" | jq -r '.accessToken')
 SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0" https://$BMCNAME/actifio/session | jq -r  '.id')
 # working portion
 VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://$BMCNAME/actifio/config/version | jq -r  '.summary')
@@ -207,20 +207,27 @@ curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $T
 ```
 Here is an example output:
 ```
-["1482152","instance-1","GCPInstance"]
+["89377","sg-lin-hana-1","GCPInstance"]
+["61802","sg-lin-rock-1","GCPInstance"]
+["45710","sg-lin-sap-1","GCPInstance"]
+["37497","sg-lin-deb-1","GCPInstance"]
+["32701","syd-lin-1","GCPInstance"]
+["31961","win2022-4","VMBackup"]
+["31959","centos4","VMBackup"]
+["31957","ubuntu4","VMBackup"]
 ```
-We now have the application ID for our application (in this example 8766).
+We now have the application IDs for our syd-lin-1 VM (in this example 32701).
 
 ### Learning the policy ID
 
 This is done in two parts. First we need to learn the template (SLT) ID. So use your application ID like this:
 ```
-appid=1482152
+appid=32701
 curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/sla?filter=appid:==$appid" | jq -cr '.items[] | [.slt]'
 ```
 Example output:
 ```
-[{"id":"1455060","href":"https://agm-249843756318.backupdr.actifiogo.com/actifio/slt/1455060","name":"nosnap","override":"true","sourcename":"nosnap"}]
+[{"id":"32701","href":"https://agm-249843756318.backupdr.actifiogo.com/actifio/slt/1455060","name":"nosnap","override":"true","sourcename":"nosnap"}]
 ```
 Now we have the SLT ID, which in this example is 1455060.
 
@@ -241,7 +248,7 @@ Now we have the appid and policy ID we can run the backup job. Importantly we al
 appid=1482152
 policyid=1455061
 label="test1"
-curl -w "\n" -sS -XPOST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID"  "https://$BMCNAME/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid},\"label\":\"$label\"}"  
+curl -w "\n" -sS -XPOST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/application/$appid/backup" -d "{\"policy\":{\"id\":$policyid},\"label\":\"$label\"}"  
 ```
 If this is a database application you need to also specify a backuptype of **log** or **DB** so the JSON data block would look like this:
 ```
