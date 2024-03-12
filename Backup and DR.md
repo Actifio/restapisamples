@@ -20,7 +20,6 @@ In this example (yours will be different!):
 * Management Console URL:  https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleusercontent.com/actifio
 * OAuth 2.0 client ID:  486521251570-fimdb0rbeamc17l3akilvquok1dssn6t.apps.googleusercontent.com
 
-
 ## Creating your Service Account
 
 From Cloud Console IAM & Admin panel in the project where Backup and DR was activated, go to **Service Account** and choose **Create Service Account**. You can also modify an existing one if desired.
@@ -102,12 +101,8 @@ $ curl -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-
   ]
 }
 ```
-### Add the user before they login
-To ensure the user has the correct role the first time it logs in, manually adding the user to the Management Console BEFORE the first login is recommended. After you create the user in Google IAM, login to your Management Console, go to Manage → Users and select Create User
-
-Now enter the Service account email as the Username and select the relevant roles.
-
-You can now proceed to login having 'pre-added' user and assigned it a Management Console role.
+### Check the Service Account 
+Time to ensure you have added the IAM role(s) (listed above) to the service account, and remember sometimes a few minutes are required to allow those roles to apply.
 
 ## Login process - API
 
@@ -125,14 +120,14 @@ curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H 
 This command will create a token. Place that token into a variable called $TOKEN
 To use JQ to do this:
 ```
-TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/powershell@avwservicelab1.iam.gserviceaccount.com:generateIdToken -d '{"audience":"486522031570-fimdb0rbeamc17l3akilvquok1dssn6t.apps.googleusercontent.com", "includeEmail":"true"}' | jq -r '.token')
+TOKEN=$(curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json; charset=utf-8" -d '{"scope": "https://www.googleapis.com/auth/cloud-platform","lifetime": "3600s"}' "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/powershell@avwservicelab1.iam.gserviceaccount.com:generateAccessToken" | jq -r '.accessToken')
 ```
 
 #### Step two - create a session ID
 
 Now we have a $TOKEN we then create a session ID with the following command. Again you need to modify this example to set your Management Console API endpoint. Note it needs /session at the end. 
 ```
-curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://agm-666993295923.backupdr.actifiogo.com/actifio/session 
+curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0" https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleusercontent.com/actifio/session 
 ```
 The first part of the output should contain a section like this. The session_id is needed for all future commands.
 ```
@@ -145,19 +140,19 @@ Place the session ID into a variable called $SESSIONID
 
 Here is an example with JQ:
 ```
-SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://agm-666993295923.backupdr.actifiogo.com/actifio/session | jq -r  '.id')
+SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0" https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleusercontent.com/actifio/session | jq -r  '.id')
 ```
-Now modify this command to validate your connection. Change the API endpoint. It needs /config/version at the end.
+Now modify this command to validate your connection. Change the API endpoint. It needs /config/version at the end. This will show the Management Console Version if succesful.
 ```
-curl -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://agm-666993295923.backupdr.actifiogo.com/actifio/config/version
+curl -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleusercontent.com/actifio/config/version
 ```
 Here is an example:
 ```
-[avw@powershell ~]$ curl -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://agm-666993295923.backupdr.actifiogo.com/actifio/config/version
+[avw@powershell ~]$ curl -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleusercontent.com/actifio/config/version
 {
    "product" : "AGM",
-   "summary" : "11.0.0.6831"
-}[avw@powershell ~]$ 
+   "summary" : "240207.03.04"
+}
 ```
 
 #### Example script
@@ -166,12 +161,12 @@ In this example script, you need to modify the BMCNAME, SANAME and OAUTH to matc
 ```
 #!/bin/bash
 # UPDATE THESE THREE VALUES TO MATCH YOUR ENVIRONMENT
-BMCNAME=agm-1234.backupdr.actifiogo.com
+BMCNAME=https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleusercontent.com
 SANAME=apiuser@project1.iam.gserviceaccount.com
 OAUTH=5678-abcd.apps.googleusercontent.com
 # login
 TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OAUTH'", "includeEmail":"true"}' | jq -r '.token')
-SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://$BMCNAME/actifio/session | jq -r  '.id')
+SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0" https://$BMCNAME/actifio/session | jq -r  '.id')
 # working portion
 VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://$BMCNAME/actifio/config/version | jq -r  '.summary')
 # echo data
@@ -181,12 +176,12 @@ In this sample script we simplify things. Because the activated service account 
 ```
 #!/bin/bash
 # UPDATE THESE TWO VALUES TO MATCH YOUR ENVIRONMENT
-BMCNAME=agm-1234.backupdr.actifiogo.com
+BMCNAME=https://bmc-676825165455-jcohvzto-dot-asia-southeast1.backupdr.googleusercontent.com
 OAUTH=5678-abcd.apps.googleusercontent.com
 # login
 SANAME=$(gcloud config list account --format "value(core.account)")
 TOKEN=$(curl -sS -XPOST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$SANAME:generateIdToken -d '{"audience":"'$OAUTH'", "includeEmail":"true"}' | jq -r '.token')
-SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0"  https://$BMCNAME/actifio/session | jq -r  '.id')
+SESSIONID=$(curl -sS -XPOST -H "Authorization: Bearer $TOKEN" -H "Content-Length: 0" https://$BMCNAME/actifio/session | jq -r  '.id')
 # working portion
 VERSION=$(curl -sS -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" https://$BMCNAME/actifio/config/version | jq -r  '.summary')
 # echo data
@@ -274,7 +269,7 @@ And if you run it after the job finishes you will see:
 
 There are three considerations when converting from Actifio GO:
 
-1. Is the automation using AGM API commands or Sky API commands or Sky SSH
+1. Is the automation using AGM API commands or Sky API commands or Sky ssh
 1. Configuration of the host where the automation is running 
 1. The user ID being used by the automation for authentication will need to change.
 
