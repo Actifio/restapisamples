@@ -68,11 +68,7 @@ At this point we can proceed with the next step.
 
 
 ### Add the user before they login
-To ensure the user has the correct role the first time it logs in, manually adding the user to the Management Console BEFORE the first login is recommended. After you create the user in Google IAM, login to your Management Console, go to Manage → Users and select Create User
-
-Now enter the Service account email as the Username and select the relevant roles.   
-
-You can now proceed to login having 'pre-added' user and assigned it a Management Console role.
+To ensure the user has the correct role the first time it logs in, manually adding the user to the Management Console BEFORE the first login is recommended. After you create the user in Google IAM, assign one of the Google Cloud Backup and DR Roles to your account.
 
 ### Configure the Python script
 
