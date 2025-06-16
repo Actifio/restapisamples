@@ -3,7 +3,7 @@
 
 if [ $# -lt 7 ]; then
   cat << EOF
-  Usage: $0 <MS_URL> <appid> <datavol> <logvol> <logbackup> <hostid> <disktypie> <wait_flag>
+  Usage: $0 <MS_URL> <appid> <datavol> <logvol> <logbackup> <hostid> <disktype> <wait_flag>
   MS_URL     :  Management Console URL, Ex: https://bmc-699999999995-pxyzabco-dot-asia-southeast1.backupdr.googleusercontent.com
   appid      :  Source Application ID from Management Console
   datavol    :  Data volume mount point Ex: /opt/ibm/db2/data
