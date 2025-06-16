@@ -272,6 +272,41 @@ And if you run it after the job finishes you will see:
 ["Job_0080640","centos1","succeeded",null]
 ```
 
+## Mounting an IBM Db2 Database image to a target host (not starting the Database)
+
+1. Begin with the above steps to create a service account and give it access to the Backup and DR API via IAM, but for ease of use it's recommended to configure a service account for a Linux Compute Engine VM to run as, and give that service account "Backup and DR Admin" privileges (while completing initial testing), then later on you can use "Backup and DR Mount User" for the service account. This will ensure that when logged into the ssh shell, you can run commands and authenticate as the VMs service account.
+
+To create an on-demand mount, you need to learn the following information:
+
+* The URL for the Management Console.
+* The Application ID for the source application, i.e the IBM Db2 Instance that was backed up.
+* The Host ID for the target host, where you want the disks mounted to.
+* The Target Mount Points for the Database, Log, and Archive Logs
+* The Type of disk to use for the mounted volumes (i.e. pd-ssd, pd-balanced, etc).
+
+See above for steps on how to identify the Application ID and Host ID, else enable the column in "Manage --> Hosts" menu and record the ID value.
+For the Application ID, goto the "App Manager --> Applications" menu, and enable the column to show "ID", and look for the number for your source Database instance.
+
+Lastly you need the full URL of your management console, no need for any trailing characters, and you do not need to include /Actifio path either.
+
+Then using the script in this folder "db2_mount_via_api.sh", download the script, set the script to executable, and run it with the following syntax in this order:
+
+```
+./db2_mount_via_api.sh <MS_URL> <appid> <datavol> <logvol> <logbackup> <hostid> <disktype> <wait_flag>
+```
+Or for a sample syntax:
+
+```
+./db2_mount_via_api.sh https://bmc-699999999995-pxxxxyyo-dot-asia-southeast1.backupdr.googleusercontent.com 1340102 /mnt/data /mnt/log /mnt/backup 1294549 pd-ssd true
+```
+
+Where the Management Console URL is passed first, followed by the Application ID of the source Db2 instance, then target mount point for the database files, then log files, then archive log files then the target host ID, disk type to use, and whether to wait for the job to complete (true or false).
+
+Depending on how large the volumes are this may take a little while, but this will trigger the API call to the Management Console, to create new Persistent Disks from the latest backup image, and mount these using the mount paths you have specified. It will then stop.
+
+If you have finished using the mounts, you can then run "Unmount & Delete" from the "App Manager --> Active Mounts" menu. Sometimes you may need to select `force` if the mount paths are not able to be cleaned up.
+
+
 ## Converting Scripts From Actifio GO to Backup and DR
 
 There are three considerations when converting from Actifio GO:
