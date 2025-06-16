@@ -304,7 +304,7 @@ Where the Management Console URL is passed first, followed by the Application ID
 
 Depending on how large the volumes are this may take a little while, but this will trigger the API call to the Management Console, to create new Persistent Disks from the latest backup image, and mount these using the mount paths you have specified. It will then stop.
 
-If you have finished using the mounts, you can then run "Unmount & Delete" from the "App Manager --> Active Mounts" menu. Sometimes you may need to select `force` if the mount paths are not able to be cleaned up.
+If you have finished using the mounts, you can then run "Unmount & Delete" from the "App Manager --> Active Mounts" menu. Sometimes you may need to select `Force Unmount` if the mount paths are not able to be cleaned up, because you are using similar mount paths as an existing LVM VG.
 
 
 ## Converting Scripts From Actifio GO to Backup and DR
