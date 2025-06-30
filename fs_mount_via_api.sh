@@ -4,14 +4,14 @@
 set -e
 
 # Set -x to display commands as they are executed. (Enable for debugging)
-set -x
+#set -x
 
 # Define the usage function.
 usage() {
   cat <<EOF
   echo "Usage: $0 <MS_URL> <appname> <targetmountpoint> <targethostname>"
    MS_URL: Management Console URL (e.g., https://bmc-xxxx-dot-asia-southeast1.backupdr.googleusercontent.com)
-   appname           : The Filesystem appname you want to mount
+   appname           : The Filesystem Appname you want to mount
    targetmountpoint  : Target mountpoint (e.g., /mnt/recovery)
    targethostname    : Target host where you want to recover the files (e.g., linuxfs01)
    e.g.### ./fs_mount_via_api.sh https://bmc-xxxx-dot-asia-southeast1.backupdr.googleusercontent.com <data> /mnt/recovery linuxfs01
@@ -19,6 +19,22 @@ EOF
   exit 1
   }
 
+output_date()
+{
+  echo "Date: "$(date +"%m-%d-%Y %H:%M:%S")""
+}
+
+label="$(tr -dc 'a-z' < /dev/urandom | head -c 8; echo)"
+label='apimount_'"$label"
+
+TMPPATH=$PWD
+remove_file()
+{
+  filename=$1
+  if [[ -f $filename ]]; then
+     rm -f $filename
+  fi
+}
 # Assign arguments to variables with more descriptive names
  MS_URL="$1"
  APP_NAME="$2"
@@ -140,7 +156,7 @@ MOUNT_RESPONSE=$(curl -s -f -X POST -H "backupdr-management-session: Actifio ${S
       "restoreobject": "'"${APP_NAME}"'"
     }
   ],
-  "label": "apimounttest2",
+  "label": "'"${label}"'",
   "host": {
     "id": "'"${TARGET_HOST_ID}"'"
   },
@@ -165,3 +181,95 @@ if [[ $? -ne 0 ]] ; then
 fi
 
 echo "Mount operation triggered successfully."
+
+echo "=======  Monitoring the mount job ========"
+sleep 10
+jobs=$(curl -s -f -X GET -H "backupdr-management-session: Actifio ${SESSION_ID}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" "${BMC_API_URL}/jobstatus?filter=label:==$label&filter=jobclass:==mount")
+#echo "outputofjobs"
+#echo $jobs
+output_date
+
+########################## Get the Job ID #######################
+count=0
+echo "$jobs" > $TMPPATH/data_$label.json  # Save data to a file
+jobid=$(jq -r '.items[0].id' $TMPPATH/data_$label.json)
+echo "Jobid: $jobid"
+
+while [[ -z "$jobid" ]] || [[ "$jobid" == "null" ]]; do
+      sleep 20
+      echo "Trying to get the job id"
+      jobs=`curl -s -f -X GET -H "backupdr-management-session: Actifio ${SESSION_ID}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" "${BMC_API_URL}/jobstatus?filter=label:==$label&filter=jobclass:==mount"`
+      if [[ -z "$jobs" ]]; then
+      echo   generate_token
+      fi
+     echo "$jobs" > $TMPPATH/data_$label.json  # Save data to a file
+     jobid=$(jq -r '.items[0].id' $TMPPATH/data_$label.json)
+     count=$(($count+1))
+     if [[ "$count" -eq 360 ]]; then
+        echo "Unable to get the Job ID"
+        remove_file $TMPPATH/data_$label.json
+        remove_file $TMPPATH/test_$label.out
+        exit 1
+     fi
+done
+########################## Get the Job status #######################
+status=`curl -s -f -X GET -H "backupdr-management-session: Actifio ${SESSION_ID}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" "${BMC_API_URL}/job/$jobid"`
+sleep 2
+
+output_date
+
+echo "$status" > $TMPPATH/data_$label.json
+jobstatus=$(jq -r '.status' $TMPPATH/data_$label.json)
+while [[ "$jobstatus" == "running" ]]; do
+   echo "====== Mount job $jobid is still running ====="
+   sleep 20
+   status=`curl -s -f -XGET -H "backupdr-management-session: Actifio ${SESSION_ID}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" "${BMC_API_URL}/job/$jobid"` 2>&1
+   if [[ -z "$status" ]]; then
+   echo "status not found"
+   fi
+   echo "$status" > $TMPPATH/data_$label.json
+   jobstatus=$(jq -r '.status' $TMPPATH/data_$label.json)
+   if [[ -z "$jobstatus" ]]; then
+      sleep 20
+      status=`curl -s -f -XGET -H "backupdr-management-session: Actifio ${SESSION_ID}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" "${BMC_API_URL}/job/$jobid"` 2>&1
+      echo "$status" > $TMPPATH/data_$label.json
+      jobstatus=$(jq -r '.status' $TMPPATH/data_$label.json)
+   fi
+done
+output_date
+sleep 10
+count=0
+
+###################################### Job Message ############################
+jobmessage=$(jq -r '.message' $TMPPATH/data_$label.json)
+while [[ "$jobmessage" == "null" ]] || [[ -z "$jobmessage" ]]; do
+    sleep 20
+    status=`curl -s -f -XGET -H "backupdr-management-session: Actifio ${SESSION_ID}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" "${BMC_API_URL}/job/$jobid"` 2>&1
+    if [[ -z "$status" ]]; then
+       echo "status not found"
+    fi
+    echo "$status" > $TMPPATH/data_$label.json
+    jobmessage=$(jq -r '.message' $TMPPATH/data_$label.json)
+    count=$(($count+1))
+    if [[ "$count" -eq 360 ]]; then
+       echo "Unable to get the Job ID"
+       remove_file $TMPPATH/data_$label.json
+       remove_file $TMPPATH/test_$label.out
+       exit 1
+    fi
+done
+output_date
+
+if [[ "$jobstatus" == "succeeded" ]]; then
+   echo "================ Mount completed successfully for the app:$APP_NAME==================="
+else
+   echo "Mount job failed with the error message :$jobmessage"
+   #echo "Mount job failed for the application: $appid  with the error message :$jobmessage" | mail -s "Integrity Check Failed" xyz@abc.com
+   remove_file $TMPPATH/data_$label.json
+   remove_file $TMPPATH/test_$label.out
+   remove_file $TOUCH_DIR/'.'"$appid"_mount.txt
+   exit 1
+fi
+output_date
+remove_file $TMPPATH/data_$label.json
+remove_file $TMPPATH/test_$label.out
