@@ -272,6 +272,50 @@ And if you run it after the job finishes you will see:
 ["Job_0080640","centos1","succeeded",null]
 ```
 
+## Creating Dynamic Protection Tags
+
+If we want to create a dynamic Protection Tags, we need to learn four things:
+
+1. The Template ID for the Template you require in the Tag pairing
+1. The Profile ID for the Profile you require in the Tag pairing
+1. The Name of the Tag
+1. The type of Tag (VMware VM or Compute Engine VM).
+
+
+### Learning the template ID (Backup Policies) - use the id value of the template you need to use.
+
+We can query the template end point like this, but this will return a lot of data
+```
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/slt"
+```
+### Learning the profile ID (Appliance and Storage options) - use the id value of the profile you need to use.
+
+We can query the profile end point like this, but this will return a lot of data
+```
+curl -sS -X GET -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" "https://$BMCNAME/actifio/slp"
+```
+### Create a Dynamic Protection Tag
+
+We can now make the tag using the above ids for the template and profile, along with the application type, which can be `VMBackup` or `GCPInstance` :
+```
+curl -sS -X POST -H "Content-type: application/json" -H "Authorization: Bearer $TOKEN" -H "backupdr-management-session: Actifio $SESSIONID" -d '{ "dynamicprotectiontagvalue":"tag-name","slt":{"id":2168872},"slp":{"id":2168738},"applicationtype":"VMBackup"}' "https://$BMCNAME/actifio/dynamicprotection"
+```
+Example output:
+```
+{
+   "@type" : "dynamicProtectionRest",
+   "dynamicprotectiontagvalue" : "tag-name",
+   "slt" : {
+      "id" : "2168872"
+   },
+   "slp" : {
+      "id" : "2168738"
+   },
+   "applicationtype" : "VMBackup"
+}
+```
+
+
 ## Mounting an IBM Db2 Database image to a target host (not starting the Database)
 
 1. Begin with the above steps to create a service account and give it access to the Backup and DR API via IAM, but for ease of use it's recommended to configure a service account for a Linux Compute Engine VM to run as, and give that service account "Backup and DR Admin" privileges (while completing initial testing), then later on you can use "Backup and DR Mount User" for the service account. This will ensure that when logged into the ssh shell, you can run commands and authenticate as the VMs service account.
