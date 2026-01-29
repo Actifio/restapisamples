@@ -45,8 +45,8 @@ credentials = impersonated_credentials.Credentials(
     lifetime=3600,
 )
 
-# Refresh the token if it has expired
-if credentials.expired:
+# Refresh the token if it has expired or fetch if missing
+if credentials.expired or credentials.token is None:
     credentials.refresh(Request())
 
 # Get the access token
